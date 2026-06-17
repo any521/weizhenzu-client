@@ -1,0 +1,58 @@
+.result[data-v-865bb626] {
+  min-height: 100vh;
+  background: #F5F5F7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 24px;
+}
+.icon-circle[data-v-865bb626] {
+  width: 96px;
+  height: 96px;
+  border-radius: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 56px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+.icon-success[data-v-865bb626] {
+  background: #4CAF50;
+}
+.icon-fail[data-v-865bb626] {
+  background: #F44336;
+}
+.title[data-v-865bb626] {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2C2C2C;
+}
+.desc[data-v-865bb626] {
+  font-size: 13px;
+  color: #999999;
+  margin-top: 8px;
+}
+.actions[data-v-865bb626] {
+  display: flex;
+  gap: 16px;
+  margin-top: 40px;
+  width: 100%;
+}
+.action-btn[data-v-865bb626] {
+  flex: 1;
+  height: 48px;
+  line-height: 48px;
+  text-align: center;
+  border: 1px solid #FF6B35;
+  color: #FF6B35;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.action-primary[data-v-865bb626] {
+  background: linear-gradient(135deg, #FF6B35, #FF8C42);
+  color: #fff;
+  border: none;
+}

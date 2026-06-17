@@ -1,0 +1,17 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "lib": ["esnext", "dom"],
+    "types": [
+      "@dcloudio/types"
+    ]
+  },
+  "vueCompilerOptions": {
+    "plugins": ["@dcloudio/uni-cli-shared/lib/vue-language-plugin"]
+  },
+  "include": ["src/**/*", "src/**/*.vue"]
+}

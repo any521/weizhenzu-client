@@ -1,0 +1,55 @@
+.edit[data-v-24ed4d92] {
+  min-height: 100vh;
+  background: #F5F5F7;
+  padding: 12px 16px;
+}
+.form-card[data-v-24ed4d92] {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.form-item[data-v-24ed4d92] {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #EEEEEE;
+  min-height: 56px;
+}
+.form-item .label[data-v-24ed4d92] {
+  width: 80px;
+  color: #2C2C2C;
+  font-size: 14px;
+}
+.form-item uni-input[data-v-24ed4d92] {
+  flex: 1;
+  font-size: 14px;
+}
+.form-item .tag-group[data-v-24ed4d92] {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.form-item .tag-group .tag[data-v-24ed4d92] {
+  padding: 4px 14px;
+  border: 1px solid #EEEEEE;
+  border-radius: 14px;
+  font-size: 12px;
+  color: #666666;
+}
+.form-item .tag-group .tag-active[data-v-24ed4d92] {
+  background: rgba(255, 107, 53, 0.1);
+  border-color: #FF6B35;
+  color: #FF6B35;
+}
+.save-btn[data-v-24ed4d92] {
+  margin-top: 24px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  background: linear-gradient(135deg, #FF6B35, #FF8C42);
+  color: #fff;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+}

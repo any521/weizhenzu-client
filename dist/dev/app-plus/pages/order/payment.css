@@ -1,0 +1,95 @@
+.payment[data-v-bd8d4c0c] {
+  min-height: 100vh;
+  background: #F5F5F7;
+  padding-bottom: 80px;
+}
+.amount-card[data-v-bd8d4c0c] {
+  background: linear-gradient(135deg, #FF6B35, #FF8C42);
+  color: #fff;
+  padding: 32px 20px;
+  text-align: center;
+}
+.lbl[data-v-bd8d4c0c] {
+  display: block;
+  font-size: 13px;
+  opacity: 0.9;
+}
+.amount[data-v-bd8d4c0c] {
+  display: block;
+  font-size: 40px;
+  font-weight: 800;
+  margin: 8px 0;
+}
+.order-no[data-v-bd8d4c0c] {
+  display: block;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.pay-methods[data-v-bd8d4c0c] {
+  background: #fff;
+  margin: 16px;
+  border-radius: 12px;
+  padding: 16px;
+}
+.section-title[data-v-bd8d4c0c] {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: #2C2C2C;
+}
+.pay-item[data-v-bd8d4c0c] {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #EEEEEE;
+}
+.pay-item[data-v-bd8d4c0c]:last-child {
+  border-bottom: none;
+}
+.pay-icon[data-v-bd8d4c0c] {
+  font-size: 28px;
+  margin-right: 14px;
+}
+.pay-info[data-v-bd8d4c0c] {
+  flex: 1;
+}
+.pay-name[data-v-bd8d4c0c] {
+  font-size: 15px;
+  font-weight: 600;
+  display: block;
+}
+.pay-desc[data-v-bd8d4c0c] {
+  font-size: 11px;
+  color: #999999;
+  margin-top: 2px;
+}
+.pay-radio[data-v-bd8d4c0c] {
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  border: 2px solid #EEEEEE;
+}
+.pay-radio-active[data-v-bd8d4c0c] {
+  background: #FF6B35;
+  border-color: #FF6B35;
+  box-shadow: inset 0 0 0 3px #fff;
+}
+.pay-active[data-v-bd8d4c0c] {
+  background: rgba(255, 107, 53, 0.04);
+  border-radius: 8px;
+}
+.pay-btn[data-v-bd8d4c0c] {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  background: linear-gradient(135deg, #FF6B35, #FF8C42);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 25px;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
+}

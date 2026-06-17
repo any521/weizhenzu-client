@@ -1,0 +1,51 @@
+// 红色调外卖 APP 设计变量
+
+// 主色
+$primary: #FF4B33;
+$primary-light: #FF6B6B;
+$primary-dark: #E53935;
+$primary-text: #FFFFFF;
+
+// 辅助色
+$secondary: #FFC300;
+$secondary-light: #FFD54F;
+$accent: #FF9900;
+
+// 功能色
+$success: #00C853;
+$danger: #FF4B33;
+$warning: #FF9800;
+$info: #2196F3;
+
+// 中性色
+$text: #333333;
+$text-light: #666666;
+$text-muted: #999999;
+$border: #FFE5E5;
+$bg: #FFF5F5;
+$card: #FFFFFF;
+
+// 顶部红色渐变
+$header-start: #FF6B6B;
+$header-end: #FF4B33;
+
+// 阴影
+$shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
+$shadow-md: 0 4px 12px rgba(255, 75, 51, 0.08);
+$shadow-lg: 0 8px 24px rgba(255, 75, 51, 0.1);
+
+// 布局
+$tabbar-height: 64px;
+$tabbar-center-size: 56px;
+$navbar-height: 44px;
+$status-bar-height: 44px;
+
+// 圆角
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$radius-xl: 20px;
+$radius-round: 50%;
+
+// 字体
+$font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;

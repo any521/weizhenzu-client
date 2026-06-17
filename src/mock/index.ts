@@ -1,0 +1,367 @@
+// 客户端 Mock 数据 —— 一比一对应 e:/projects/复习/味真足产品原型 各页面展示数据
+// 目的：前端独立运行，无需后端即可展示完整效果
+
+export const MOCK_USER = {
+  id: 12345,
+  nickname: '味真足小厨',
+  phone: '138****8888',
+  avatar: '👤',
+  vip: 'SVIP',
+  level: '黄金会员',
+  stats: { favorite: 36, footprint: 128, coupon: 8, points: 3256 }
+}
+
+export const MOCK_CATEGORIES = [
+  { id: 1, name: '美食', icon: '', bg: 'linear-gradient(135deg, #FF6B35, #FF8C42)' },
+  { id: 2, name: '早餐', icon: '', bg: 'linear-gradient(135deg, #FFC107, #FFD54F)' },
+  { id: 3, name: '跑腿代购', icon: '', bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)' },
+  { id: 4, name: '甜品饮品', icon: '', bg: 'linear-gradient(135deg, #2196F3, #03A9F4)' },
+  { id: 5, name: '果蔬生鲜', icon: '', bg: 'linear-gradient(135deg, #9C27B0, #BA68C8)' },
+  { id: 6, name: '汉堡西餐', icon: '', bg: 'linear-gradient(135deg, #E91E63, #F06292)' },
+  { id: 7, name: '咖啡奶茶', icon: '', bg: 'linear-gradient(135deg, #00BCD4, #4DD0E1)' },
+  { id: 8, name: '大牌专送', icon: '', bg: 'linear-gradient(135deg, #FF5722, #FF8A65)' },
+  { id: 9, name: '面食', icon: '', bg: 'linear-gradient(135deg, #795548, #A1887F)' },
+  { id: 10, name: '全部分类', icon: '', bg: 'linear-gradient(135deg, #607D8B, #90A4AE)' }
+]
+
+export const MOCK_HOME_BANNER = {
+  title: '新人专享',
+  subtitle: '首单立减 8 元 满 20 减 10'
+}
+
+export const MOCK_MERCHANTS = [
+  {
+    id: 1,
+    name: '金牌商家',
+    logo: '🥇',
+    rating: 4.9,
+    monthlySales: 2356,
+    minOrder: 20,
+    deliveryFee: 5,
+    deliveryTime: '30分钟',
+    tags: [{ type: 'primary', text: '满减' }, { type: 'success', text: '折扣' }],
+    promo: '满30减5 满50减10 满80减20',
+    top: true,
+    bg: 'linear-gradient(135deg, #FF6B35, #FFC107)'
+  },
+  {
+    id: 2,
+    name: '绿色餐厅',
+    logo: '🥗',
+    rating: 4.7,
+    monthlySales: 1289,
+    minOrder: 15,
+    deliveryFee: 4,
+    deliveryTime: '35分钟',
+    tags: [{ type: 'warning', text: '新店' }],
+    promo: '新客立减 8 元',
+    top: false,
+    bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)'
+  },
+  {
+    id: 3,
+    name: '石家班',
+    logo: '🍜',
+    rating: 4.8,
+    monthlySales: 3654,
+    minOrder: 25,
+    deliveryFee: 5,
+    deliveryTime: '40分钟',
+    tags: [{ type: 'danger', text: '热销' }, { type: 'primary', text: '满减' }],
+    promo: '满50减12 满100减25',
+    top: false,
+    bg: 'linear-gradient(135deg, #E91E63, #FF8A65)'
+  },
+  {
+    id: 4,
+    name: '味真足私厨',
+    logo: '🍲',
+    rating: 4.8,
+    monthlySales: 1890,
+    minOrder: 18,
+    deliveryFee: 4,
+    deliveryTime: '32分钟',
+    tags: [{ type: 'primary', text: '满减' }],
+    promo: '满30减5 满60减10',
+    top: true,
+    bg: 'linear-gradient(135deg, #FF6B35, #FFC107)'
+  },
+  {
+    id: 5,
+    name: '美味轩',
+    logo: '🍰',
+    rating: 4.6,
+    monthlySales: 956,
+    minOrder: 22,
+    deliveryFee: 5,
+    deliveryTime: '38分钟',
+    tags: [{ type: 'warning', text: '新店' }],
+    promo: '满40减8 满80减15',
+    top: false,
+    bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)'
+  }
+]
+
+export const MOCK_MERCHANT_DETAIL = {
+  id: 1,
+  name: '麦当劳麦乐送【石家庄...',
+  logo: '🍔',
+  bg: 'linear-gradient(135deg, #FF6B35, #FFC107)',
+  rating: 4.7,
+  monthlySales: 3654,
+  minOrder: 20,
+  deliveryFee: 5,
+  deliveryTime: '30分钟',
+  tags: [{ type: 'primary', text: '满30减5' }, { type: 'primary', text: '满50减12' }, { type: 'primary', text: '满100减25' }, { type: 'success', text: '新客立减' }],
+  notice: '欢迎光临麦当劳麦乐送，本店提供新鲜美味的汉堡、薯条和饮料。',
+  categories: ['热销', '套餐', '小食', '饮品', '甜品'],
+  activeCategory: 0
+}
+
+export const MOCK_DISHES = [
+  {
+    id: 101,
+    merchantId: 1,
+    name: '巨无霸套餐',
+    desc: '100%纯牛肉饼，搭配特制酱料',
+    sales: 2356,
+    rating: 98,
+    price: 38,
+    originalPrice: 45,
+    tags: [{ type: 'primary', text: '招牌' }, { type: 'warning', text: '热销' }],
+    bg: 'linear-gradient(135deg, #FF6B35, #FFC107)',
+    qty: 0
+  },
+  {
+    id: 102,
+    merchantId: 1,
+    name: '麦辣鸡腿堡套餐',
+    desc: '香辣酥脆，经典搭配',
+    sales: 1854,
+    rating: 96,
+    price: 32,
+    originalPrice: 38,
+    tags: [{ type: 'primary', text: '招牌' }],
+    bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)',
+    qty: 1
+  },
+  {
+    id: 103,
+    merchantId: 1,
+    name: '麦乐鸡 10 块',
+    desc: '外酥里嫩，蘸酱更美味',
+    sales: 1256,
+    rating: 95,
+    price: 25,
+    originalPrice: 0,
+    tags: [],
+    bg: 'linear-gradient(135deg, #E91E63, #FF8A65)',
+    qty: 2
+  },
+  {
+    id: 104,
+    merchantId: 1,
+    name: '麦辣鸡翅 4 块',
+    desc: '香辣过瘾，回味无穷',
+    sales: 1023,
+    rating: 94,
+    price: 22,
+    originalPrice: 0,
+    tags: [{ type: 'success', text: '新品' }],
+    bg: 'linear-gradient(135deg, #2196F3, #03A9F4)',
+    qty: 0
+  },
+  {
+    id: 105,
+    merchantId: 1,
+    name: '薯条大份',
+    desc: '金黄酥脆，经典小食',
+    sales: 856,
+    rating: 92,
+    price: 15,
+    originalPrice: 0,
+    tags: [],
+    bg: 'linear-gradient(135deg, #9C27B0, #BA68C8)',
+    qty: 0
+  },
+  {
+    id: 106,
+    merchantId: 1,
+    name: '草莓圣代',
+    desc: '香甜草莓，冰爽享受',
+    sales: 654,
+    rating: 96,
+    price: 12,
+    originalPrice: 0,
+    tags: [],
+    bg: 'linear-gradient(135deg, #FF6B35, #FFC107)',
+    qty: 0
+  },
+  {
+    id: 107,
+    merchantId: 1,
+    name: '可乐中杯',
+    desc: '畅爽口感，快乐加倍',
+    sales: 548,
+    rating: 93,
+    price: 8,
+    originalPrice: 0,
+    tags: [],
+    bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)',
+    qty: 0
+  },
+  {
+    id: 108,
+    merchantId: 1,
+    name: '派（香芋/菠萝）',
+    desc: '酥脆外皮，香甜内馅',
+    sales: 423,
+    rating: 90,
+    price: 10,
+    originalPrice: 0,
+    tags: [],
+    bg: 'linear-gradient(135deg, #E91E63, #FF8A65)',
+    qty: 0
+  }
+]
+
+export const MOCK_DISH_DETAIL = {
+  id: 101,
+  name: '巨无霸套餐',
+  emoji: '🍔',
+  bg: 'linear-gradient(135deg, #FF6B35, #FFC107)',
+  rating: 4.9,
+  sales: 2356,
+  goodRate: 98,
+  price: 38,
+  originalPrice: 45,
+  tags: [{ type: 'primary', text: '限时折扣' }, { type: 'success', text: '满减' }],
+  specs: ['单点', '套餐', '家庭装'],
+  activeSpec: 1,
+  flavors: ['原味', '辣味', 'BBQ', '芝士'],
+  activeFlavor: 0,
+  description: '经典巨无霸汉堡，100%纯牛肉饼，搭配特制酱料、生菜、芝士、酸黄瓜和洋葱，含中份薯条和中杯可乐。汉堡经过高温煎制，锁住肉汁，每一口都充满满足感。'
+}
+
+export const MOCK_CART = {
+  merchant: MOCK_MERCHANT_DETAIL,
+  items: [
+    { dishId: 101, name: '巨无霸套餐', spec: '套餐', price: 38, qty: 1 },
+    { dishId: 104, name: '麦辣鸡翅 4 块', spec: '原味', price: 22, qty: 2 }
+  ],
+  total: 82,
+  deliveryFee: 5,
+  discount: 5,
+  payable: 82
+}
+
+export const MOCK_ORDERS = [
+  {
+    id: 'DD20260617001',
+    merchant: { name: '麦当劳麦乐送', logo: '🍔', bg: 'linear-gradient(135deg, #FF6B35, #FFC107)' },
+    status: 0,
+    statusText: '待付款',
+    statusType: 'warning',
+    items: '巨无霸套餐 等 2 件商品',
+    spec: '大份 / 含中薯条可乐',
+    count: 2,
+    amount: 56,
+    time: '12:30',
+    btns: [{ text: '取消订单', primary: false }, { text: '去支付', primary: true }]
+  },
+  {
+    id: 'DD20260617002',
+    merchant: { name: '石家班', logo: '🍜', bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)' },
+    status: 5,
+    statusText: '配送中',
+    statusType: 'warning',
+    items: '石家班招牌大餐',
+    spec: '2人份套餐 / 含3样配菜',
+    count: 1,
+    amount: 78,
+    time: '11:45',
+    btns: [{ text: '查看详情', primary: false }, { text: '催单', primary: true }]
+  },
+  {
+    id: 'DD20260616099',
+    merchant: { name: '味真足私厨', logo: '🍲', bg: 'linear-gradient(135deg, #E91E63, #FF8A65)' },
+    status: 7,
+    statusText: '已完成',
+    statusType: 'success',
+    items: '私房红烧肉 等 2 件商品',
+    spec: '标准份 / 配米饭',
+    count: 2,
+    amount: 45,
+    time: '昨天 12:00',
+    btns: [{ text: '再来一单', primary: false }, { text: '去评价', primary: true }]
+  },
+  {
+    id: 'DD20260615088',
+    merchant: { name: '金牌商家', logo: '🥇', bg: 'linear-gradient(135deg, #FF6B35, #FFC107)' },
+    status: 7,
+    statusText: '已完成',
+    statusType: 'success',
+    items: '招牌牛肉面',
+    spec: '大份 / 微辣',
+    count: 1,
+    amount: 25,
+    time: '6-15 19:20',
+    btns: [{ text: '删除', primary: false }, { text: '再来一单', primary: true }]
+  },
+  {
+    id: 'DD20260612055',
+    merchant: { name: '美味轩', logo: '🍰', bg: 'linear-gradient(135deg, #2196F3, #03A9F4)' },
+    status: 8,
+    statusText: '已取消',
+    statusType: 'muted',
+    items: '精美下午茶套餐',
+    spec: '甜品 + 咖啡',
+    count: 2,
+    amount: 32,
+    time: '6-12 15:30',
+    btns: [{ text: '删除', primary: false }, { text: '再次下单', primary: true }]
+  }
+]
+
+export const MOCK_ORDER_DETAIL = {
+  id: 'DD20260617001',
+  status: '已完成',
+  statusCode: 7,
+  deliveryTime: '12:53 已送达',
+  riderName: '张师傅',
+  deliveryDuration: 23,
+  merchant: { name: '麦当劳麦乐送（东外滩店）', icon: '🍔' },
+  items: [
+    { name: '巨无霸套餐', spec: '大份 / 含中薯条可乐', price: 38, qty: 1, bg: 'linear-gradient(135deg, #FF6B35, #FFC107)' },
+    { name: '麦辣鸡腿堡', spec: '单点', price: 18, qty: 1, bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)' }
+  ],
+  goodsAmount: 56,
+  deliveryFee: 5,
+  discount: 5,
+  payable: 56,
+  orderNo: '20260617001',
+  orderTime: '2026-06-17 12:30',
+  address: '东外滩8号 3 栋 1502 室',
+  contact: '李女士 138****8888',
+  payType: '微信支付'
+}
+
+export const MOCK_COUPONS = [
+  { id: 1, type: 'amount', value: 10, condition: '满 50 元可用', name: '外卖通用满减券', desc: '全场通用 · 不可叠加', expire: '2026.06.30', status: 'unused', bg: 'linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%)' },
+  { id: 2, type: 'discount', value: 8, condition: '限大牌专送', name: '大牌专送折扣券', desc: '限大牌专送商家使用', expire: '2026.07.15', status: 'unused', bg: 'linear-gradient(135deg, #FFC107, #FFD54F)' },
+  { id: 3, type: 'amount', value: 5, condition: '无门槛', name: '新人无门槛券', desc: '新用户专享 · 无使用门槛', expire: '2026.06.20', status: 'unused', bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)' },
+  { id: 4, type: 'amount', value: 20, condition: '满 100 元可用', name: '大额满减券', desc: '全场通用 · 不可叠加', expire: '2026.05.01', status: 'used', bg: 'linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%)' },
+  { id: 5, type: 'discount', value: 7, condition: '下午茶专享', name: '下午茶折扣券', desc: '限下午茶品类使用', expire: '2026.04.15', status: 'used', bg: 'linear-gradient(135deg, #FFC107, #FFD54F)' }
+]
+
+export const MOCK_RATING_TAGS = ['味道赞', '分量足', '包装精美', '送货快', '态度好', '性价比高', '食材新鲜', '干净卫生']
+
+export const MOCK_ADDRESSES = [
+  { id: 1, name: '李女士', phone: '138****8888', address: '东外滩8号 3 栋 1502 室', tag: '家', default: true },
+  { id: 2, name: '王先生', phone: '139****6666', address: '中关村科技园 A 座 808', tag: '公司', default: false }
+]
+
+export const MOCK_MESSAGES = [
+  { id: 1, title: '订单已送达', content: '您的订单 DD20260616099 已送达，快去评价吧~', time: '昨天 12:30', unread: true },
+  { id: 2, title: '优惠券到账', content: '新人无门槛券已到账，满0元可用', time: '6-15 10:00', unread: false }
+]

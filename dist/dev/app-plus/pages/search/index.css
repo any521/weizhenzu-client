@@ -1,57 +1,150 @@
+
+.category-icon-svg[data-v-55c74977] {
+  display: block;
+  flex-shrink: 0;
+}
+
 .search-page[data-v-308a4d57] {
   min-height: 100vh;
-  background: #F5F5F7;
-  padding: 12px 16px;
+  background: #FFF5F5;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  padding-bottom: 24px;
 }
+
+/* 顶部搜索栏 */
 .search-header[data-v-308a4d57] {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding: 10px 16px 14px;
+  background: linear-gradient(180deg, #FF6B6B 0%, #FF4B33 100%);
 }
-.search-bar[data-v-308a4d57] {
+.back-btn[data-v-308a4d57] {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.back-arrow[data-v-308a4d57] {
+  width: 10px;
+  height: 10px;
+  border-left: 2px solid #333333;
+  border-bottom: 2px solid #333333;
+  transform: rotate(45deg);
+  margin-left: 6px;
+}
+.search-input-wrap[data-v-308a4d57] {
   flex: 1;
   display: flex;
   align-items: center;
-  background: #fff;
-  border-radius: 22px;
-  padding: 0 12px;
   height: 40px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  background: #fff;
+  border-radius: 20px;
+  padding: 0 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
-.s-icon[data-v-308a4d57] {
-  font-size: 16px;
+.search-icon[data-v-308a4d57] {
+  color: #999999;
   margin-right: 8px;
-  opacity: 0.6;
 }
-uni-input[data-v-308a4d57] {
+.search-input[data-v-308a4d57] {
   flex: 1;
   font-size: 14px;
+  color: #333333;
 }
-.clear[data-v-308a4d57] {
+.placeholder[data-v-308a4d57] {
   color: #999999;
-  font-size: 18px;
-  padding: 0 4px;
-}
-.cancel[data-v-308a4d57] {
-  color: #FF6B35;
   font-size: 14px;
 }
-.hot-section[data-v-308a4d57], .history-section[data-v-308a4d57] {
-  margin-top: 24px;
+.input-clear[data-v-308a4d57] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #999999;
+  color: #fff;
+  margin-left: 8px;
+}
+.header-action[data-v-308a4d57] {
+  font-size: 15px;
+  color: #333333;
+  font-weight: 500;
+  padding: 0 4px;
+}
+
+/* AI 助手入口 */
+.ai-entry[data-v-308a4d57] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 16px;
+  padding: 12px 14px;
+  background: #FFFFFF;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
+}
+.ai-badge[data-v-308a4d57] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF4B33 100%);
+  border-radius: 12px;
+}
+.ai-name[data-v-308a4d57] {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333333;
+}
+.ai-tip[data-v-308a4d57] {
+  flex: 1;
+  font-size: 13px;
+  color: #666666;
+}
+.ai-arrow[data-v-308a4d57] {
+  color: #999999;
+}
+
+/* 默认内容区 */
+.default-content[data-v-308a4d57] {
+  padding: 0 16px;
+}
+.section[data-v-308a4d57] {
+  margin-top: 18px;
+  background: #FFFFFF;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
 }
 .section-title[data-v-308a4d57] {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 14px;
-  color: #2C2C2C;
-  font-weight: 600;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #333333;
   margin-bottom: 12px;
 }
-.clear-history[data-v-308a4d57] {
+.title-icon[data-v-308a4d57] {
+  color: #FF4B33;
+}
+.section-action[data-v-308a4d57] {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 3px;
   font-size: 12px;
   color: #999999;
   font-weight: 400;
+}
+.action-icon[data-v-308a4d57] {
+  color: #999999;
+}
+.refresh-icon[data-v-308a4d57] {
+  transition: transform 0.3s ease;
 }
 .tags[data-v-308a4d57] {
   display: flex;
@@ -59,18 +152,159 @@ uni-input[data-v-308a4d57] {
   gap: 10px;
 }
 .tag[data-v-308a4d57] {
-  background: #fff;
-  padding: 6px 14px;
+  padding: 7px 14px;
   border-radius: 16px;
   font-size: 13px;
-  color: #2C2C2C;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  background: #FFF5F5;
+  color: #333333;
 }
 .history-tag[data-v-308a4d57] {
   color: #666666;
 }
-.empty-history[data-v-308a4d57] {
+.hot-tag[data-v-308a4d57] {
+  color: #333333;
+}
+.empty-tip[data-v-308a4d57] {
   font-size: 13px;
   color: #999999;
-  padding: 12px 0;
+  padding: 6px 0;
+}
+
+/* 趋势播报 */
+.trend-section[data-v-308a4d57] {
+  padding-bottom: 10px;
+}
+.trend-title[data-v-308a4d57] {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333333;
+}
+.trend-list[data-v-308a4d57] {
+  display: flex;
+  flex-wrap: wrap;
+}
+.trend-item[data-v-308a4d57] {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+.trend-rank[data-v-308a4d57] {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #666666;
+  background: #f0f0f0;
+}
+.rank-top[data-v-308a4d57] {
+  background: #FFC300;
+  color: #fff;
+}
+.trend-thumb[data-v-308a4d57] {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.trend-body[data-v-308a4d57] {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.trend-name[data-v-308a4d57] {
+  font-size: 13px;
+  color: #333333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trend-meta[data-v-308a4d57] {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.trend-heat[data-v-308a4d57] {
+  font-size: 11px;
+  color: #999999;
+}
+.trend-tag[data-v-308a4d57] {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 195, 0, 0.12);
+  color: #FFC300;
+}
+
+/* 搜索结果 */
+.result-area[data-v-308a4d57] {
+  padding: 0 16px;
+}
+.result-list[data-v-308a4d57] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+.shop-card[data-v-308a4d57] {
+  display: flex;
+  gap: 12px;
+  background: #FFFFFF;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
+}
+.shop-img[data-v-308a4d57] {
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.shop-info[data-v-308a4d57] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.shop-name[data-v-308a4d57] {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333333;
+}
+.shop-row[data-v-308a4d57] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.shop-score[data-v-308a4d57] {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFC300;
+}
+.shop-sale[data-v-308a4d57],
+.shop-fee[data-v-308a4d57] {
+  font-size: 12px;
+  color: #999999;
+}
+.empty-result[data-v-308a4d57] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0;
+  font-size: 14px;
+  color: #666666;
+}
+.empty-img[data-v-308a4d57] {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #eee;
+  margin-bottom: 16px;
 }

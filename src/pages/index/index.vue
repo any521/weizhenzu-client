@@ -50,7 +50,7 @@
     <view class="deal-section">
       <view class="deal-header">
         <view class="deal-title">
-          <text class="deal-name">拼好饭精选</text>
+          <text class="deal-name">精选推荐</text>
           <text class="deal-tag">0起送 0配送</text>
         </view>
         <text class="deal-more">更多 ›</text>
@@ -146,7 +146,9 @@
       </view>
     </view>
 
+    <!-- #ifdef H5 -->
     <GlobalTabbar />
+    <!-- #endif -->
 
     <!-- 更多服务面板 -->
     <view v-if="showMorePanel" class="more-modal" @tap="closeMorePanel">

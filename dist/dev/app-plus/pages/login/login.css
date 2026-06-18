@@ -1,6 +1,6 @@
 .login-page[data-v-cdfe2409] {
   min-height: 100vh;
-  background: linear-gradient(180deg, #FF6B35 0%, #FF8C42 30%, #F5F5F7 30%, #F5F5F7 100%);
+  background: linear-gradient(180deg, #FF4B33 0%, #FF6B6B 30%, #FFF5F5 30%, #FFF5F5 100%);
   padding: 60px 24px 40px;
 }
 .brand[data-v-cdfe2409] {
@@ -13,13 +13,13 @@
   border-radius: 18px;
   margin: 0 auto 12px;
   background: #fff;
-  color: #FF6B35;
+  color: #FF4B33;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 36px;
   font-weight: 800;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(255, 75, 51, 0.08);
 }
 .brand-name[data-v-cdfe2409] {
   display: block;
@@ -36,13 +36,13 @@
 }
 .login-card[data-v-cdfe2409] {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 24px 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(255, 75, 51, 0.08);
 }
 .tabs[data-v-cdfe2409] {
   display: flex;
-  border-bottom: 1px solid #EEEEEE;
+  border-bottom: 1px solid #FFE5E5;
   margin-bottom: 24px;
 }
 .tab[data-v-cdfe2409] {
@@ -55,7 +55,7 @@
   font-weight: 500;
 }
 .tab-active[data-v-cdfe2409] {
-  color: #FF6B35;
+  color: #FF4B33;
   font-weight: 700;
 }
 .tab-active[data-v-cdfe2409]::after {
@@ -66,44 +66,44 @@
   transform: translateX(-50%);
   width: 24px;
   height: 3px;
-  background: #FF6B35;
+  background: #FF4B33;
   border-radius: 2px;
 }
 .form-item[data-v-cdfe2409] {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #EEEEEE;
+  border-bottom: 1px solid #FFE5E5;
   padding: 14px 0;
   margin-bottom: 4px;
 }
 .form-label[data-v-cdfe2409] {
   width: 70px;
-  color: #2C2C2C;
+  color: #333333;
   font-size: 14px;
 }
 .form-input[data-v-cdfe2409] {
   flex: 1;
   font-size: 15px;
-  color: #2C2C2C;
+  color: #333333;
 }
 .sms-btn[data-v-cdfe2409] {
   padding: 6px 12px;
   font-size: 13px;
-  color: #FF6B35;
-  border: 1px solid #FF6B35;
+  color: #FF4B33;
+  border: 1px solid #FF4B33;
   border-radius: 16px;
   background: #fff;
 }
 .sms-btn-disabled[data-v-cdfe2409] {
   color: #999999;
-  border-color: #EEEEEE;
+  border-color: #FFE5E5;
 }
 .submit-btn[data-v-cdfe2409] {
   margin-top: 28px;
   height: 48px;
   line-height: 48px;
   text-align: center;
-  background: linear-gradient(135deg, #FF6B35, #FF8C42);
+  background: linear-gradient(135deg, #FF4B33, #FF6B6B);
   color: #fff;
   font-size: 16px;
   font-weight: 600;

@@ -56,5 +56,11 @@ uni-tabbar.uni-tabbar-bottom,
   height: 0 !important;
   overflow: hidden !important;
 }
+
+uni-page-body,
+uni-page-wrapper {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
 /* #endif */
 </style>

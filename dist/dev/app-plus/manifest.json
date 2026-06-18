@@ -78,7 +78,7 @@
     "tabBar": {
       "position": "bottom",
       "color": "#999999",
-      "selectedColor": "#FF6B35",
+      "selectedColor": "#333333",
       "borderStyle": "rgba(0,0,0,0.4)",
       "blurEffect": "none",
       "fontSize": "10px",
@@ -88,21 +88,22 @@
       "list": [
         {
           "pagePath": "pages/index/index",
-          "text": "首页"
+          "text": "外卖"
+        },
+        {
+          "pagePath": "pages/coupon/index",
+          "text": "神券"
         },
         {
           "pagePath": "pages/order/list",
           "text": "订单"
         },
         {
-          "pagePath": "pages/cart/index",
-          "text": "购物车"
-        },
-        {
           "pagePath": "pages/profile/index",
           "text": "我的"
         }
       ],
+      "custom": true,
       "backgroundColor": "#FFFFFF",
       "selectedIndex": 0,
       "shown": true,

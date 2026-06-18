@@ -166,7 +166,9 @@
       </view>
     </view>
 
+    <!-- #ifdef H5 -->
     <GlobalTabbar />
+    <!-- #endif -->
   </view>
 </template>
 

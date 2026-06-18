@@ -7,12 +7,12 @@
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <g v-html="path" />
+    <component :is="node" v-for="(node, i) in nodes" :key="i" />
   </svg>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, h } from 'vue'
 
 const props = defineProps<{
   name: string
@@ -81,6 +81,8 @@ const icons: Record<string, string> = {
   order: `<path d="M12 8h24v32H12V8Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 16h16M12 22h20M16 28h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`,
   profile: `<circle cx="24" cy="18" r="7" stroke="currentColor" stroke-width="2.5"/><path d="M10 40c3-6 9-10 14-10s11 4 14 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`,
 
+  settings: `<circle cx="24" cy="24" r="8" stroke="currentColor" stroke-width="2.5"/><path d="M35 21h3a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-3a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V41a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 22 39.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1-1.51H13a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 14.6 27a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H19a1.65 1.65 0 0 0 1-1.51V7a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V21a1.65 1.65 0 0 0 1.51 1H35z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+
   // 通用状态
   star: `<path d="M24 6l5.5 11h11l-9 8.5L35 36 24 30 13 36l3.5-10.5-9-8.5h11L24 6Z" fill="currentColor"/>`,
   check: `<circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2.5"/><path d="M16 24l6 6 10-12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`,
@@ -90,6 +92,35 @@ const icons: Record<string, string> = {
 }
 
 const path = computed(() => icons[props.name] || icons.more)
+
+function parseAttrs(attrStr: string): Record<string, string | number> {
+  const attrs: Record<string, string | number> = {}
+  const regex = /(\w+[-:\w]*)="([^"]*)"/g
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(attrStr)) !== null) {
+    const key = match[1]
+    let value: string | number = match[2]
+    if (!isNaN(Number(value)) && value !== '') {
+      value = Number(value)
+    }
+    attrs[key] = value
+  }
+  return attrs
+}
+
+const nodes = computed(() => {
+  const svg = path.value
+  const tagRegex = /<\s*(\w+)\s*([^>]*?)\s*\/>/g
+  const result: any[] = []
+  let match: RegExpExecArray | null
+  while ((match = tagRegex.exec(svg)) !== null) {
+    const tag = match[1]
+    const attrStr = match[2]
+    const attrs = parseAttrs(attrStr)
+    result.push(h(tag, attrs))
+  }
+  return result
+})
 </script>
 
 <style scoped>

@@ -1,10 +1,10 @@
 .payment[data-v-bd8d4c0c] {
   min-height: 100vh;
-  background: #F5F5F7;
+  background: #FFF5F5;
   padding-bottom: 80px;
 }
 .amount-card[data-v-bd8d4c0c] {
-  background: linear-gradient(135deg, #FF6B35, #FF8C42);
+  background: linear-gradient(135deg, #FF4B33, #FF6B6B);
   color: #fff;
   padding: 32px 20px;
   text-align: center;
@@ -28,20 +28,20 @@
 .pay-methods[data-v-bd8d4c0c] {
   background: #fff;
   margin: 16px;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 16px;
 }
 .section-title[data-v-bd8d4c0c] {
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 14px;
-  color: #2C2C2C;
+  color: #333333;
 }
 .pay-item[data-v-bd8d4c0c] {
   display: flex;
   align-items: center;
   padding: 14px 0;
-  border-bottom: 1px solid #EEEEEE;
+  border-bottom: 1px solid #FFE5E5;
 }
 .pay-item[data-v-bd8d4c0c]:last-child {
   border-bottom: none;
@@ -67,11 +67,11 @@
   width: 22px;
   height: 22px;
   border-radius: 11px;
-  border: 2px solid #EEEEEE;
+  border: 2px solid #FFE5E5;
 }
 .pay-radio-active[data-v-bd8d4c0c] {
-  background: #FF6B35;
-  border-color: #FF6B35;
+  background: #FF4B33;
+  border-color: #FF4B33;
   box-shadow: inset 0 0 0 3px #fff;
 }
 .pay-active[data-v-bd8d4c0c] {
@@ -86,7 +86,7 @@
   height: 50px;
   line-height: 50px;
   text-align: center;
-  background: linear-gradient(135deg, #FF6B35, #FF8C42);
+  background: linear-gradient(135deg, #FF4B33, #FF6B6B);
   color: #fff;
   font-size: 16px;
   font-weight: 600;

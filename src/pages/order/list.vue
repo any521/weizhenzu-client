@@ -116,7 +116,9 @@
       <view style="height: 20px;"></view>
     </scroll-view>
 
+    <!-- #ifdef H5 -->
     <GlobalTabbar />
+    <!-- #endif -->
   </view>
 </template>
 

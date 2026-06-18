@@ -1,10 +1,16 @@
+
+.category-icon-svg[data-v-55c74977] {
+  display: block;
+  flex-shrink: 0;
+}
+
 .detail[data-v-5511cfa9] {
   min-height: 100vh;
-  background: #F5F5F7;
+  background: #FFF5F5;
   padding-bottom: 40px;
 }
 .completed-header[data-v-5511cfa9] {
-  background: linear-gradient(180deg, #fff 0%, #F5F5F7 100%);
+  background: linear-gradient(180deg, #fff 0%, #FFF5F5 100%);
   padding: 24px 16px 32px;
   text-align: center;
 }
@@ -12,7 +18,7 @@
   width: 72px;
   height: 72px;
   margin: 0 auto 16px;
-  background: linear-gradient(135deg, #FF6B35, #FFC107);
+  background: linear-gradient(135deg, #FF4B33, #FFC300);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -24,7 +30,7 @@
 .completed-title[data-v-5511cfa9] {
   font-size: 20px;
   font-weight: 700;
-  color: #2C2C2C;
+  color: #333333;
   margin-bottom: 4px;
 }
 .completed-sub[data-v-5511cfa9] {
@@ -37,12 +43,12 @@
   border-radius: 12px;
   padding: 16px;
   text-align: center;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
 }
 .delivery-time[data-v-5511cfa9] {
   font-size: 18px;
   font-weight: 700;
-  color: #FF6B35;
+  color: #FF4B33;
 }
 .delivery-time-sub[data-v-5511cfa9] {
   font-size: 12px;
@@ -54,7 +60,7 @@
   margin: 0 16px 12px;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
 }
 .section-head[data-v-5511cfa9] {
   display: flex;
@@ -89,7 +95,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid #EEEEEE;
+  border-bottom: 1px solid #FFE5E5;
 }
 .item-row[data-v-5511cfa9]:last-child {
   border-bottom: none;
@@ -122,15 +128,15 @@
   color: #666666;
 }
 .summary-row.total[data-v-5511cfa9] {
-  border-top: 1px solid #EEEEEE;
+  border-top: 1px solid #FFE5E5;
   margin-top: 8px;
   padding-top: 12px;
   font-size: 16px;
   font-weight: 700;
-  color: #2C2C2C;
+  color: #333333;
 }
 .summary-row.total .price[data-v-5511cfa9] {
-  color: #FF6B35;
+  color: #FF4B33;
   font-size: 20px;
 }
 .info-line[data-v-5511cfa9] {
@@ -157,11 +163,11 @@
   font-weight: 600;
 }
 .btn-primary[data-v-5511cfa9] {
-  background: linear-gradient(135deg, #FF6B35, #FF8C42);
+  background: linear-gradient(135deg, #FF4B33, #FF6B6B);
   color: #fff;
 }
 .btn-secondary[data-v-5511cfa9] {
   background: #fff;
-  color: #FF6B35;
-  border: 1px solid #FF6B35;
+  color: #FF4B33;
+  border: 1px solid #FF4B33;
 }

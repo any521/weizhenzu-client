@@ -8,19 +8,19 @@
     <view v-else>
       <view class="merchant-bar">
         <CategoryIcon name="shop" :size="18" class="m-icon" />
-        <text class="m-name">麦当劳麦乐送（东外滩店）</text>
+        <text class="m-name">{{ cartStore.merchantName || '商家' }}</text>
       </view>
       <view class="cart-list">
-        <view v-for="item in items" :key="item.dishId" class="cart-item">
-          <view class="item-img" :style="{ background: itemBg(item.name) }"></view>
+        <view v-for="item in items" :key="item.id" class="cart-item">
+          <view class="item-img" :style="{ background: itemBg(item) }"></view>
           <view class="item-info">
-            <view class="item-name">{{ item.name }}</view>
-            <view class="item-spec">{{ item.spec }}</view>
+            <view class="item-name">{{ item.dishName }}</view>
+            <view class="item-spec">{{ item.specName || '默认' }}</view>
             <view class="item-bottom">
-              <text class="item-price">¥{{ item.price.toFixed(2) }}</text>
+              <text class="item-price">¥{{ item.unitPrice.toFixed(2) }}</text>
               <view class="qty-control">
                 <text class="qty-btn" @tap="onDec(item)">−</text>
-                <text class="qty-num">{{ item.qty }}</text>
+                <text class="qty-num">{{ item.quantity }}</text>
                 <text class="qty-btn" @tap="onInc(item)">+</text>
               </view>
             </view>
@@ -30,8 +30,8 @@
 
       <view class="fee-card">
         <view class="fee-row"><text>商品金额</text><text>¥{{ cartStore.totalAmount.toFixed(2) }}</text></view>
-        <view class="fee-row"><text>配送费</text><text>¥{{ deliveryFee.toFixed(2) }}</text></view>
-        <view class="fee-row discount"><text>满减优惠</text><text>-¥{{ discount.toFixed(2) }}</text></view>
+        <view class="fee-row"><text>配送费</text><text>¥{{ cartStore.deliveryFee.toFixed(2) }}</text></view>
+        <view v-if="cartStore.packingFee > 0" class="fee-row"><text>打包费</text><text>¥{{ cartStore.packingFee.toFixed(2) }}</text></view>
       </view>
     </view>
 
@@ -48,32 +48,38 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { MOCK_DISHES } from '@/mock'
 import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 import { useCartStore } from '@/store/cart'
+import type { CartItemVO } from '@/types/api'
 
 const cartStore = useCartStore()
-const deliveryFee = 5
-const discount = 5
 
 const items = computed(() => cartStore.items)
 const totalCount = computed(() => cartStore.totalCount)
-const payable = computed(() => Math.max(0, cartStore.totalAmount + deliveryFee - discount))
-
-onShow(() => {
-  // 页面显示时可刷新数据
+const payable = computed(() => {
+  if (cartStore.payAmount > 0) return cartStore.payAmount
+  return cartStore.totalAmount + cartStore.deliveryFee + cartStore.packingFee
 })
 
-function itemBg(name: string) {
-  const dish = MOCK_DISHES.find(d => d.name === name)
-  return dish?.bg || 'linear-gradient(135deg, #FF6B35, #FFC107)'
+onShow(() => {
+  cartStore.fetchCart()
+})
+
+function itemBg(item: CartItemVO) {
+  if (item.dishImage) return `url(${item.dishImage}) center/cover`
+  return 'linear-gradient(135deg, #FF6B35, #FFC107)'
 }
 
-function onInc(item: any) {
-  cartStore.changeQty(item.dishId, 1)
+function onInc(item: CartItemVO) {
+  cartStore.changeQty(item.id, item.quantity + 1)
 }
-function onDec(item: any) {
-  cartStore.changeQty(item.dishId, -1)
+function onDec(item: CartItemVO) {
+  const quantity = item.quantity - 1
+  if (quantity <= 0) {
+    cartStore.remove(item.id)
+  } else {
+    cartStore.changeQty(item.id, quantity)
+  }
 }
 function goHome() {
   uni.switchTab({ url: '/pages/index/index' })
@@ -223,10 +229,6 @@ function goCheckout() {
   padding: 6px 0;
   font-size: 13px;
   color: $text-light;
-}
-
-.fee-row.discount {
-  color: $success;
 }
 
 .footer-bar {

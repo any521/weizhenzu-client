@@ -9,7 +9,7 @@
           </view>
           <view class="user-info">
             <view class="user-name">
-              <text>RoK703502885</text>
+              <text>{{ userStore.userInfo?.nickname || '未登录' }}</text>
               <view class="auth-badge">实名待认证</view>
             </view>
           </view>
@@ -49,7 +49,7 @@
       </view>
       <view class="favorites-text">
         <text class="favorites-title">我的收藏</text>
-        <text class="favorites-count">收藏了 12 个商家</text>
+        <text class="favorites-count">收藏了 {{ favoriteCount }} 个商家</text>
       </view>
       <text class="favorites-arrow">›</text>
     </view>
@@ -97,34 +97,64 @@
 import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 import GlobalTabbar from '@/components/GlobalTabbar/GlobalTabbar.vue'
 import { useTabStore } from '@/store/tab'
+import { useUserStore } from '@/store/user'
 import { onShow } from '@dcloudio/uni-app'
+import { ref, onMounted } from 'vue'
+import { getFavorites, getMyCoupons } from '@/api'
 
 const tabStore = useTabStore()
+const userStore = useUserStore()
+
+const favoriteCount = ref(0)
+
+const assets = ref([
+  { value: 0, label: '红包/神券', onTap: () => uni.switchTab({ url: '/pages/coupon/index' }) },
+  { value: 0, label: '商家代金券', onTap: () => uni.switchTab({ url: '/pages/coupon/index' }) },
+  { value: 0, label: '神抢手券', onTap: () => uni.switchTab({ url: '/pages/coupon/index' }) },
+  { value: 0, label: '美团币返利', onTap: () => uni.showToast({ title: '美团币返利', icon: 'none' }) },
+  { value: 0, label: '津贴', onTap: () => uni.showToast({ title: '津贴', icon: 'none' }) }
+])
+
+async function loadProfileData() {
+  try {
+    const favPage = await getFavorites({ current: 1, size: 1 })
+    favoriteCount.value = favPage.total || 0
+  } catch (e) {
+    console.error('加载收藏数失败', e)
+    favoriteCount.value = 0
+  }
+
+  try {
+    const couponsRes: any = await getMyCoupons()
+    const list = couponsRes?.list || couponsRes || []
+    const unusedCount = (list as any[]).filter((c: any) => c.status === 1).length
+    assets.value[0].value = unusedCount
+  } catch (e) {
+    console.error('加载优惠券失败', e)
+    assets.value[0].value = 0
+  }
+}
+
+onMounted(() => {
+  loadProfileData()
+})
 
 onShow(() => {
   tabStore.setActiveTab('/pages/profile/index')
 })
 
-const assets = [
-  { value: 38, label: '红包/神券', onTap: () => uni.showToast({ title: '红包/神券', icon: 'none' }) },
-  { value: 1, label: '商家代金券', onTap: () => uni.showToast({ title: '商家代金券', icon: 'none' }) },
-  { value: 0, label: '神抢手券', onTap: () => uni.showToast({ title: '神抢手券', icon: 'none' }) },
-  { value: 0, label: '美团币返利', onTap: () => uni.showToast({ title: '美团币返利', icon: 'none' }) },
-  { value: 0, label: '津贴', onTap: () => uni.showToast({ title: '津贴', icon: 'none' }) }
-]
-
 const features = [
+  { iconName: 'favorite', text: '我的收藏', bg: 'rgba(255, 75, 51, 0.12)', onTap: () => uni.navigateTo({ url: '/pages/favorites/index' }) },
   { iconName: 'address', text: '我的地址', bg: 'rgba(255, 195, 0, 0.12)', onTap: () => uni.navigateTo({ url: '/pages/address/list' }) },
-  { iconName: 'history', text: '我的足迹', bg: 'rgba(255, 195, 0, 0.12)', onTap: () => uni.showToast({ title: '我的足迹', icon: 'none' }) },
-  { iconName: 'star', text: '答谢记录', bg: 'rgba(255, 195, 0, 0.12)', onTap: () => uni.showToast({ title: '答谢记录', icon: 'none' }) },
+  { iconName: 'coupon-card', text: '优惠券', bg: 'rgba(255, 75, 51, 0.12)', onTap: () => uni.switchTab({ url: '/pages/coupon/index' }) },
+  { iconName: 'service', text: '客服中心', bg: 'rgba(0, 200, 83, 0.12)', onTap: () => uni.navigateTo({ url: '/pages/service/index' }) },
   { iconName: 'order', text: '我的评价', bg: 'rgba(255, 195, 0, 0.12)', onTap: () => uni.showToast({ title: '我的评价', icon: 'none' }) },
   { iconName: 'ticket', text: '发票助手', bg: 'rgba(255, 195, 0, 0.12)', onTap: () => uni.showToast({ title: '发票助手', icon: 'none' }) },
-  { iconName: 'shop', text: '企业用餐', bg: 'rgba(255, 195, 0, 0.12)', onTap: () => uni.showToast({ title: '企业用餐', icon: 'none' }) },
   { iconName: 'terms', text: '餐具设置', bg: 'rgba(255, 195, 0, 0.12)', onTap: () => uni.showToast({ title: '餐具设置', icon: 'none' }) }
 ]
 
 const recommends = [
-  { iconName: 'check', text: '食安专区', sub: '食品安全早知道', bg: 'rgba(0, 200, 83, 0.12)', onTap: () => uni.showToast({ title: '食安专区', icon: 'none' }) },
+  { iconName: 'message', text: '消息中心', sub: '查看订单/优惠/系统消息', bg: 'rgba(255, 75, 51, 0.12)', onTap: () => uni.navigateTo({ url: '/pages/message/index' }) },
   { iconName: 'shop', text: '浣熊食堂招商', sub: '优质商家招募中', bg: 'rgba(255, 75, 51, 0.12)', onTap: () => uni.showToast({ title: '浣熊食堂招商', icon: 'none' }) }
 ]
 
@@ -133,11 +163,11 @@ function goSettings() {
 }
 
 function onPromo() {
-  uni.showToast({ title: '25元神券领取中', icon: 'none' })
+  uni.switchTab({ url: '/pages/coupon/index' })
 }
 
 function onFavorites() {
-  uni.showToast({ title: '我的收藏', icon: 'none' })
+  uni.navigateTo({ url: '/pages/favorites/index' })
 }
 </script>
 

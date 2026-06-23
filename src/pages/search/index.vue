@@ -15,6 +15,7 @@
           placeholder="请输入商家或商品名称"
           placeholder-class="placeholder"
           confirm-type="search"
+          @input="onInput"
           @confirm="onSearch"
         />
         <view v-if="keyword" class="input-clear" @tap="keyword = ''">
@@ -22,6 +23,19 @@
         </view>
       </view>
       <view class="header-action" @tap="onSearch">搜索</view>
+    </view>
+
+    <!-- 实时联想 -->
+    <view v-if="suggestions.length" class="suggest-list">
+      <view
+        v-for="s in suggestions"
+        :key="s"
+        class="suggest-item"
+        @tap="fillAndSearch(s)"
+      >
+        <CategoryIcon name="search" :size="14" class="suggest-icon" />
+        <text class="suggest-text">{{ s }}</text>
+      </view>
     </view>
 
     <!-- AI 助手入口 -->
@@ -35,25 +49,8 @@
 
     <!-- 搜索结果区域 -->
     <view v-if="keyword.trim()" class="result-area">
-      <view v-if="resultList.length" class="result-list">
-        <view v-for="item in resultList" :key="item.id" class="shop-card">
-          <view class="shop-img" :style="{ background: item.color }" />
-          <view class="shop-info">
-            <view class="shop-name">{{ item.name }}</view>
-            <view class="shop-row">
-              <text class="shop-score">{{ item.score }}分</text>
-              <text class="shop-sale">月售{{ item.sale }}+</text>
-            </view>
-            <view class="shop-row">
-              <text class="shop-fee">起送￥{{ item.minPrice }}</text>
-              <text class="shop-fee">配送￥{{ item.delivery }}</text>
-            </view>
-          </view>
-        </view>
-      </view>
-      <view v-else class="empty-result">
-        <view class="empty-img" />
-        <text>暂无“{{ keyword }}”相关结果</text>
+      <view class="result-tip">
+        <text>点击搜索查看“{{ keyword }}”相关结果</text>
       </view>
     </view>
 
@@ -87,12 +84,8 @@
         <view class="section-title">
           <CategoryIcon name="fire" :size="16" class="title-icon" />
           <text>猜你想搜</text>
-          <view class="section-action" @tap="refreshGuess">
-            <CategoryIcon name="search" :size="12" class="action-icon refresh-icon" />
-            <text>换一批</text>
-          </view>
         </view>
-        <view class="tags">
+        <view v-if="hotTags.length" class="tags">
           <view
             v-for="t in hotTags"
             :key="t"
@@ -102,10 +95,11 @@
             {{ t }}
           </view>
         </view>
+        <view v-else class="empty-tip">暂无推荐</view>
       </view>
 
       <!-- 趋势播报 -->
-      <view class="section trend-section">
+      <view v-if="trendList.length" class="section trend-section">
         <view class="section-title">
           <text class="trend-title">趋势播报</text>
         </view>
@@ -141,45 +135,13 @@ import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 
 const keyword = ref('')
 const history = ref<string[]>([])
+const suggestions = ref<string[]>([])
+let suggestTimer: ReturnType<typeof setTimeout> | null = null
 
-const guessPool = ref([
-  '奶茶', '炸鸡', '烧烤', '火锅', '日料',
-  '螺蛳粉', '麻辣烫', '汉堡', '寿司', '轻食',
-  '小龙虾', '烤鱼', '饺子', '披萨', '粥'
-])
+const guessPool = ref<string[]>([])
 const hotTags = computed(() => guessPool.value.slice(0, 8))
 
-const trendList = ref([
-  { id: 1, title: '夏日冰爽奶茶', heat: 128.5, color: '#FF6B6B' },
-  { id: 2, title: '深夜烧烤摊', heat: 96.2, color: '#FFB347' },
-  { id: 3, title: '麻辣小龙虾', heat: 84.7, color: '#FF4B33' },
-  { id: 4, title: '减脂沙拉碗', heat: 62.1, color: '#4ECDC4' },
-  { id: 5, title: '经典牛肉面', heat: 55.4, color: '#45B7D1' },
-  { id: 6, title: '韩式炸鸡', heat: 48.9, color: '#96CEB4' },
-  { id: 7, title: '手工水饺', heat: 41.3, color: '#DDA0DD' },
-  { id: 8, title: '广式早茶', heat: 35.6, color: '#FFD93D' },
-  { id: 9, title: '酸菜鱼', heat: 29.8, color: '#6BCB77' },
-  { id: 10, title: '榴莲披萨', heat: 22.4, color: '#FF9F45' }
-])
-
-const resultList = computed(() => {
-  const kw = keyword.value.trim()
-  if (!kw) return []
-  const colors = ['#FFC300', '#FF4B33', '#4ECDC4', '#45B7D1', '#96CEB4', '#FF6B6B', '#FFD93D', '#6BCB77']
-  const names = [
-    `${kw}专门店`, `正宗${kw}`, `${kw}·精选`, `${kw}小馆`,
-    `网红${kw}`, `${kw}工坊`, `${kw}大王`, `老牌${kw}`
-  ]
-  return names.map((name, i) => ({
-    id: i,
-    name,
-    score: (4 + Math.random() * 1).toFixed(1),
-    sale: Math.floor(Math.random() * 900) + 100,
-    minPrice: Math.floor(Math.random() * 20) + 10,
-    delivery: Math.floor(Math.random() * 6),
-    color: colors[i % colors.length]
-  }))
-})
+const trendList = ref<Array<{ id: number; title: string; heat: number; color: string }>>([])
 
 onShow(() => {
   history.value = uni.getStorageSync('wzz_search_history') || []
@@ -192,6 +154,7 @@ function onSearch() {
   list.unshift(kw)
   history.value = list.slice(0, 10)
   uni.setStorageSync('wzz_search_history', history.value)
+  uni.navigateTo({ url: `/pages/search/result?keyword=${encodeURIComponent(kw)}` })
 }
 
 function fillAndSearch(text: string) {
@@ -212,21 +175,27 @@ function clearHistory() {
   })
 }
 
-function refreshGuess() {
-  const arr = [...guessPool.value]
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]]
-  }
-  guessPool.value = arr
-}
-
 function askAi() {
   uni.showToast({ title: 'AI 助手正在赶来', icon: 'none' })
 }
 
 function goBack() {
   uni.navigateBack()
+}
+
+function onInput() {
+  if (suggestTimer) clearTimeout(suggestTimer)
+  const kw = keyword.value.trim()
+  if (!kw) {
+    suggestions.value = []
+    return
+  }
+  suggestTimer = setTimeout(() => {
+    // 从历史记录中匹配联想词
+    suggestions.value = history.value
+      .filter(s => s.includes(kw) || kw.includes(s))
+      .slice(0, 8)
+  }, 300)
 }
 </script>
 
@@ -511,74 +480,14 @@ function goBack() {
   padding: 0 16px;
 }
 
-.result-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.shop-card {
-  display: flex;
-  gap: 12px;
-  background: $card;
-  border-radius: $radius-lg;
-  padding: 14px;
-  box-shadow: $shadow;
-}
-
-.shop-img {
-  width: 84px;
-  height: 84px;
-  border-radius: $radius-md;
-  flex-shrink: 0;
-}
-
-.shop-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.shop-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: $text;
-}
-
-.shop-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.shop-score {
-  font-size: 14px;
-  font-weight: 700;
-  color: $secondary;
-}
-
-.shop-sale,
-.shop-fee {
-  font-size: 12px;
-  color: $text-muted;
-}
-
-.empty-result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 60px 0;
+.result-tip {
+  margin-top: 16px;
+  padding: 32px 16px;
+  text-align: center;
   font-size: 14px;
   color: $text-light;
-}
-
-.empty-img {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: #eee;
-  margin-bottom: 16px;
+  background: $card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow;
 }
 </style>

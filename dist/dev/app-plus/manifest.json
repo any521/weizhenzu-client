@@ -92,7 +92,7 @@
         },
         {
           "pagePath": "pages/coupon/index",
-          "text": "神券"
+          "text": "卡券"
         },
         {
           "pagePath": "pages/order/list",

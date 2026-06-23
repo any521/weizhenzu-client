@@ -3,19 +3,19 @@
     <!-- 商家信息头 -->
     <view class="merchant-header">
       <view class="merchant-info-row">
-        <view class="merchant-logo" :style="{ background: merchant.bg }">{{ merchant.logo }}</view>
+        <view class="merchant-logo" :style="{ background: card.bg }">{{ card.logo }}</view>
         <view class="merchant-detail">
-          <view class="merchant-name-row">{{ merchant.name }}</view>
+          <view class="merchant-name-row">{{ card.name }}</view>
           <view class="merchant-rating">
-            <view class="star"><CategoryIcon name="star" :size="10" /> {{ merchant.rating }}</view>
-            <text>月售 {{ merchant.monthlySales }}</text>
-            <text>起送 ¥{{ merchant.minOrder }}</text>
-            <text>配送 ¥{{ merchant.deliveryFee }}</text>
+            <view class="star"><CategoryIcon name="star" :size="10" /> {{ card.rating }}</view>
+            <text>月售 {{ card.monthlySales }}</text>
+            <text>起送 ¥{{ card.minOrder }}</text>
+            <text>配送 ¥{{ card.deliveryFee }}</text>
           </view>
         </view>
       </view>
       <view class="merchant-promo-row">
-        <text v-for="(tag, idx) in merchant.tags" :key="idx" :class="['tag', `tag-${tag.type}`]">{{ tag.text }}</text>
+        <text v-for="(tag, idx) in card.tags" :key="idx" :class="['tag', `tag-${tag.type}`]">{{ tag.text }}</text>
       </view>
     </view>
 
@@ -46,7 +46,7 @@
           <view class="menu-item-info">
             <view class="menu-item-name">{{ d.name }}</view>
             <view class="menu-item-desc">{{ d.desc }}</view>
-            <view class="menu-item-stats">月售 {{ d.sales }} <view class="star"><CategoryIcon name="star" :size="10" /> {{ (d.rating / 20).toFixed(1) }}</view></view>
+            <view class="menu-item-stats">月售 {{ d.sales }} <view class="star"><CategoryIcon name="star" :size="10" /> {{ d.rating.toFixed(1) }}</view></view>
             <view class="menu-item-bottom">
               <view class="menu-item-price">
                 ¥{{ d.price }}
@@ -69,24 +69,27 @@
     <scroll-view v-else-if="activeTab === 1" scroll-y class="tab-content" :style="{ height: contentHeight + 'px' }">
       <view class="rating-summary">
         <view class="rating-score">
-          <text class="score">{{ merchant.rating }}</text>
+          <text class="score">{{ card.rating }}</text>
           <text class="score-label">商家评分</text>
         </view>
         <view class="rating-tags">
           <text v-for="(tag, idx) in ratingTags" :key="idx" class="rating-tag">{{ tag }}</text>
         </view>
       </view>
-      <view class="comment-list">
-        <view v-for="i in 3" :key="i" class="comment-item">
+      <view v-if="reviews.length" class="comment-list">
+        <view v-for="r in reviews" :key="r.id" class="comment-item">
           <view class="comment-user">
             <view class="user-avatar"><CategoryIcon name="user" :size="14" /></view>
-            <text class="user-name">用户{{ 1000 + i }}</text>
+            <text class="user-name">{{ r.nickname || '匿名用户' }}</text>
           </view>
           <view class="comment-content">
             <view class="star"><CategoryIcon v-for="n in 5" :key="n" name="star" :size="10" /></view>
-            <text class="comment-text">味道不错，配送很快，下次还会再来！</text>
+            <text class="comment-text">{{ r.content || '用户未留下评价' }}</text>
           </view>
         </view>
+      </view>
+      <view v-else class="comment-empty">
+        <text>暂无评价</text>
       </view>
       <view style="height: 80px;"></view>
     </scroll-view>
@@ -95,13 +98,14 @@
     <scroll-view v-else scroll-y class="tab-content" :style="{ height: contentHeight + 'px' }">
       <view class="notice-card">
         <view class="notice-title">商家公告</view>
-        <text class="notice-text">{{ merchant.notice }}</text>
+        <text class="notice-text">{{ detail.notice || '暂无公告' }}</text>
       </view>
       <view class="info-card">
         <view class="info-title">商家信息</view>
-        <view class="info-line"><text>配送时间</text><text>{{ merchant.deliveryTime }}</text></view>
-        <view class="info-line"><text>起送价</text><text>¥{{ merchant.minOrder }}</text></view>
-        <view class="info-line"><text>配送费</text><text>¥{{ merchant.deliveryFee }}</text></view>
+        <view class="info-line"><text>配送时间</text><text>{{ card.deliveryTime }}</text></view>
+        <view class="info-line"><text>起送价</text><text>¥{{ card.minOrder }}</text></view>
+        <view class="info-line"><text>配送费</text><text>¥{{ card.deliveryFee }}</text></view>
+        <view class="info-line"><text>商家地址</text><text>{{ detail.address || '' }}</text></view>
       </view>
       <view style="height: 80px;"></view>
     </scroll-view>
@@ -111,54 +115,117 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { MOCK_MERCHANT_DETAIL, MOCK_DISHES, MOCK_RATING_TAGS } from '@/mock'
+import { getMerchantDetail, getMerchantMenu, getMerchantReviews } from '@/api'
+import type { MerchantVO, DishCategoryVO, ReviewVO } from '@/types/api'
 import FloatingCart from '@/components/FloatingCart/FloatingCart.vue'
 import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 import { useCartStore } from '@/store/cart'
+import { merchantVoToCard, menuCategoriesToCard } from '@/utils/dataTransform'
 
-const merchant = ref(MOCK_MERCHANT_DETAIL)
-const dishes = ref(MOCK_DISHES.map(d => ({ ...d })))
-const ratingTags = ref(MOCK_RATING_TAGS)
-const tabs = ref(['点餐', `评价 ${MOCK_MERCHANT_DETAIL.monthlySales}`, '商家'])
+const detail = ref<Partial<MerchantVO>>({})
+const categories = ref<DishCategoryVO[]>([])
+const reviews = ref<ReviewVO[]>([])
+const ratingTags = ref(['味道赞', '分量足', '包装精美', '送货快', '态度好', '性价比高', '食材新鲜', '干净卫生'])
+const tabs = ref(['点餐', '评价', '商家'])
 const activeTab = ref(0)
 const contentHeight = ref(600)
 const cartStore = useCartStore()
+const merchantId = ref(0)
 
-const menuSections = computed(() => {
-  return [
-    { title: '招牌推荐', dishes: dishes.value.slice(0, 4), icon: 'fire' },
-    { title: '人气单品', dishes: dishes.value.slice(4), icon: 'star' }
-  ]
+const card = computed(() => merchantVoToCard(detail.value as MerchantVO))
+const menuSections = computed(() => menuCategoriesToCard(categories.value, cartStore.qtyMap))
+
+const cartItemMap = computed(() => {
+  const map: Record<string, { id: number; quantity: number }> = {}
+  cartStore.items.forEach((item) => {
+    map[`${item.dishId}-${item.specId || ''}`] = { id: item.id, quantity: item.quantity }
+  })
+  return map
 })
 
 onLoad((q: any) => {
-  // 可依据 q.id 切换商家，当前使用 Mock
+  const id = Number(q?.id || 1)
+  merchantId.value = id
+  loadData(id)
   uni.getSystemInfo({
     success: (res: any) => {
       contentHeight.value = res.windowHeight - 220
-    }
+    },
   })
 })
 
-function onInc(d: any) {
-  d.qty++
-  cartStore.addOrUpdate({
-    dishId: d.id,
-    name: d.name,
-    spec: '默认',
-    price: d.price,
-    qty: 1
-  })
-  uni.showToast({ title: '已加入购物车', icon: 'success' })
-}
-function onDec(d: any) {
-  if (d.qty > 0) {
-    d.qty--
-    cartStore.changeQty(d.id, -1)
+onMounted(() => {
+  cartStore.fetchCart()
+})
+
+watch(activeTab, (idx) => {
+  if (idx === 1 && merchantId.value && !reviews.value.length) {
+    loadReviews(merchantId.value)
+  }
+})
+
+async function loadData(id: number) {
+  try {
+    const [m, menu] = await Promise.all([
+      getMerchantDetail(id),
+      getMerchantMenu(id),
+    ])
+    detail.value = m || {}
+    categories.value = menu || []
+  } catch (e) {
+    console.error('加载商家详情失败', e)
   }
 }
+
+async function loadReviews(id: number) {
+  try {
+    const res = await getMerchantReviews(id, { current: 1, size: 10 })
+    reviews.value = res?.list || []
+  } catch (e) {
+    console.error('加载评价失败', e)
+    reviews.value = []
+  }
+}
+
+function onInc(d: any) {
+  const merchantId = detail.value.id
+  if (!merchantId) return
+
+  if (cartStore.merchantId && cartStore.merchantId !== merchantId) {
+    uni.showModal({
+      title: '提示',
+      content: '购物车已有其他商家商品，是否清空并加入当前商家？',
+      success: (res) => {
+        if (res.confirm) {
+          cartStore.clear().then(() => addDish(merchantId, d))
+        }
+      },
+    })
+    return
+  }
+  addDish(merchantId, d)
+}
+
+async function addDish(merchantId: number, d: any) {
+  await cartStore.addItem({ merchantId, dishId: d.id, specId: d.specId, quantity: 1 })
+  uni.showToast({ title: '已加入购物车', icon: 'success' })
+}
+
+function onDec(d: any) {
+  if (d.qty <= 0) return
+  const key = `${d.id}-${d.specId || ''}`
+  const cartItem = cartItemMap.value[key]
+  if (!cartItem) return
+  const quantity = cartItem.quantity - 1
+  if (quantity <= 0) {
+    cartStore.remove(cartItem.id)
+  } else {
+    cartStore.changeQty(cartItem.id, quantity)
+  }
+}
+
 function goDish(id: number) {
   uni.navigateTo({ url: `/pages/dish/detail?id=${id}` })
 }
@@ -175,6 +242,7 @@ function goCart() {
   background: $bg;
   position: relative;
   padding-bottom: 80px;
+  padding-top: var(--window-top);
 }
 
 .merchant-header {
@@ -524,6 +592,15 @@ function goCart() {
   line-height: 1.5;
 }
 
+.comment-empty {
+  background: #fff;
+  margin-top: 8px;
+  padding: 48px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: $text-muted;
+}
+
 .notice-card,
 .info-card {
   background: #fff;
@@ -558,5 +635,4 @@ function goCart() {
 .info-line:last-child {
   border-bottom: none;
 }
-
 </style>

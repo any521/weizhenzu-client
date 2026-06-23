@@ -83,6 +83,30 @@
       }
     },
     {
+      "path": "pages/order/delivery",
+      "style": {
+        "navigationBarTitleText": "配送跟踪"
+      }
+    },
+    {
+      "path": "pages/order/map",
+      "style": {
+        "navigationBarTitleText": "配送地图"
+      }
+    },
+    {
+      "path": "pages/order/rating",
+      "style": {
+        "navigationBarTitleText": "评价订单"
+      }
+    },
+    {
+      "path": "pages/refund/detail",
+      "style": {
+        "navigationBarTitleText": "退款详情"
+      }
+    },
+    {
       "path": "pages/address/list",
       "style": {
         "navigationBarTitleText": "收货地址"
@@ -92,6 +116,12 @@
       "path": "pages/address/edit",
       "style": {
         "navigationBarTitleText": "编辑地址"
+      }
+    },
+    {
+      "path": "pages/address/map",
+      "style": {
+        "navigationBarTitleText": "地图选点"
       }
     },
     {
@@ -110,7 +140,7 @@
     {
       "path": "pages/coupon/index",
       "style": {
-        "navigationBarTitleText": "优惠券"
+        "navigationBarTitleText": "我的卡券"
       }
     },
     {
@@ -123,6 +153,24 @@
       "path": "pages/search/index",
       "style": {
         "navigationBarTitleText": "搜索"
+      }
+    },
+    {
+      "path": "pages/search/result",
+      "style": {
+        "navigationBarTitleText": "搜索结果"
+      }
+    },
+    {
+      "path": "pages/service/index",
+      "style": {
+        "navigationBarTitleText": "客服中心"
+      }
+    },
+    {
+      "path": "pages/favorites/index",
+      "style": {
+        "navigationBarTitleText": "我的收藏"
       }
     }
   ],
@@ -146,7 +194,7 @@
       },
       {
         "pagePath": "pages/coupon/index",
-        "text": "神券"
+        "text": "卡券"
       },
       {
         "pagePath": "pages/order/list",

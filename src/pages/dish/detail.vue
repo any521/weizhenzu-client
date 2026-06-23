@@ -1,41 +1,41 @@
 <template>
   <view class="detail-page">
     <view class="detail-hero">
-      <view class="detail-product-img" :style="{ background: dish.bg }">{{ dish.emoji }}</view>
+      <view class="detail-product-img" :style="{ background: display.bg }"></view>
     </view>
 
     <view class="detail-content">
-      <view class="detail-name">{{ dish.name }}</view>
+      <view class="detail-name">{{ display.name }}</view>
       <view class="detail-sales">
-        <view class="star"><CategoryIcon name="star" :size="10" /> {{ dish.rating }}</view>
-        <text> · 月售 {{ dish.sales }} · </text>
-        <text>好评率 {{ dish.goodRate }}%</text>
+        <view class="star"><CategoryIcon name="star" :size="10" /> {{ display.rating }}</view>
+        <text> · 月售 {{ display.sales }} · </text>
+        <text>好评率 {{ display.goodRate }}%</text>
       </view>
       <view class="detail-price-row">
         <view class="detail-price">
-          ¥{{ dish.price }}
-          <text v-if="dish.originalPrice" class="old">¥{{ dish.originalPrice }}</text>
+          ¥{{ display.price }}
+          <text v-if="display.originalPrice" class="old">¥{{ display.originalPrice }}</text>
         </view>
-        <text v-for="(tag, idx) in dish.tags" :key="idx" :class="['detail-tag', tag.type === 'success' && 'success']">{{ tag.text }}</text>
+        <text v-for="(tag, idx) in display.tags" :key="idx" :class="['detail-tag', tag.type === 'success' && 'success']">{{ tag.text }}</text>
       </view>
 
-      <view class="detail-section">
+      <view v-if="specList.length" class="detail-section">
         <view class="detail-section-title">选择规格</view>
         <view class="detail-spec-row">
           <text
-            v-for="(spec, idx) in dish.specs"
+            v-for="(spec, idx) in specList"
             :key="idx"
             :class="['detail-spec-item', activeSpec === idx && 'active']"
             @tap="activeSpec = idx"
-          >{{ spec }}</text>
+          >{{ spec.name }}</text>
         </view>
       </view>
 
-      <view class="detail-section">
+      <view v-if="flavorList.length" class="detail-section">
         <view class="detail-section-title">口味选择</view>
         <view class="detail-spec-row">
           <text
-            v-for="(flavor, idx) in dish.flavors"
+            v-for="(flavor, idx) in flavorList"
             :key="idx"
             :class="['detail-spec-item', activeFlavor === idx && 'active']"
             @tap="activeFlavor = idx"
@@ -45,7 +45,7 @@
 
       <view class="detail-section">
         <view class="detail-section-title">商品描述</view>
-        <view class="detail-desc">{{ dish.description }}</view>
+        <view class="detail-desc">{{ display.description || '暂无描述' }}</view>
       </view>
 
       <view class="detail-section">
@@ -72,24 +72,71 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { MOCK_DISH_DETAIL } from '@/mock'
+import { getDishDetail } from '@/api'
+import type { DishVO, DishSpecVO } from '@/types/api'
 import FloatingCart from '@/components/FloatingCart/FloatingCart.vue'
 import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 import { useCartStore } from '@/store/cart'
+import { dishVoToCard } from '@/utils/dataTransform'
 
-const dish = ref(MOCK_DISH_DETAIL)
-const activeSpec = ref(MOCK_DISH_DETAIL.activeSpec)
-const activeFlavor = ref(MOCK_DISH_DETAIL.activeFlavor)
+const dish = ref<Partial<DishVO>>({})
+const activeSpec = ref(0)
+const activeFlavor = ref(0)
 const qty = ref(1)
 const cartStore = useCartStore()
 
-const totalPrice = computed(() => (dish.value.price * qty.value).toFixed(2))
+const display = computed(() => {
+  const card = dishVoToCard(dish.value as DishVO)
+  return {
+    name: card.name,
+    bg: card.bg,
+    rating: card.rating.toFixed(1),
+    sales: card.sales,
+    goodRate: 98,
+    price: card.price,
+    originalPrice: card.originalPrice,
+    tags: card.tags,
+    description: dish.value.description || '',
+  }
+})
+
+const specList = computed<DishSpecVO[]>(() => dish.value.specs?.length ? dish.value.specs : [])
+const flavorList = computed<string[]>(() => {
+  const tags = dish.value.tags || []
+  return tags.length ? tags.slice(0, 4) : []
+})
+
+const selectedSpecId = computed(() => {
+  if (!specList.value.length) return undefined
+  return specList.value[activeSpec.value]?.id
+})
+
+const totalPrice = computed(() => {
+  const base = Number(dish.value.price || 0)
+  const diff = selectedSpecId.value
+    ? (specList.value.find((s) => s.id === selectedSpecId.value)?.priceDiff || 0)
+    : 0
+  return ((base + diff) * qty.value).toFixed(2)
+})
 
 onLoad((q: any) => {
-  // 可依据 q.id 切换，当前使用 Mock
+  const id = Number(q?.id)
+  if (id) loadData(id)
 })
+
+onMounted(() => {
+  cartStore.fetchCart()
+})
+
+async function loadData(id: number) {
+  try {
+    dish.value = await getDishDetail(id)
+  } catch (e) {
+    console.error('加载菜品详情失败', e)
+  }
+}
 
 function onInc() {
   qty.value++
@@ -97,13 +144,18 @@ function onInc() {
 function onDec() {
   if (qty.value > 1) qty.value--
 }
-function addCart() {
-  cartStore.addOrUpdate({
-    dishId: dish.value.id,
-    name: dish.value.name,
-    spec: `${dish.value.specs[activeSpec.value]} / ${dish.value.flavors[activeFlavor.value]}`,
-    price: dish.value.price,
-    qty: qty.value
+async function addCart() {
+  const merchantId = dish.value.merchantId
+  const dishId = dish.value.id
+  if (!merchantId || !dishId) {
+    uni.showToast({ title: '商品信息不完整', icon: 'none' })
+    return
+  }
+  await cartStore.addItem({
+    merchantId,
+    dishId,
+    specId: selectedSpecId.value,
+    quantity: qty.value,
   })
   uni.showToast({ title: '已加入购物车', icon: 'success' })
 }

@@ -29,33 +29,106 @@
       <textarea v-model="remark" placeholder="请描述退款原因（选填）" />
     </view>
 
+    <view class="card">
+      <view class="section-title">上传凭证<text class="sub-title">（最多 3 张）</text></view>
+      <view class="image-list">
+        <view v-for="(img, idx) in images" :key="idx" class="image-item">
+          <image class="upload-img" :src="img" mode="aspectFill" @tap="previewImage(idx)" />
+          <view class="img-delete" @tap.stop="deleteImage(idx)">
+            <CategoryIcon name="close" :size="10" />
+          </view>
+        </view>
+        <view v-if="images.length < 3" class="image-item upload-btn" @tap="chooseImage">
+          <CategoryIcon name="camera" :size="24" />
+          <text class="upload-text">{{ images.length }}/3</text>
+        </view>
+      </view>
+    </view>
+
     <view class="submit-btn" @tap="onSubmit">提交退款申请</view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { MOCK_ORDER_DETAIL } from '@/mock'
+import { onLoad } from '@dcloudio/uni-app'
+import { createRefund } from '@/api'
+import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 
 const reasons = ref(['商家未接单', '配送超时', '商品质量问题', '错送/漏送', '其他原因'])
 const selectedReason = ref(0)
-const refundAmount = ref(MOCK_ORDER_DETAIL.payable.toFixed(2))
-const maxAmount = ref(MOCK_ORDER_DETAIL.payable)
+const refundAmount = ref('')
+const maxAmount = ref(0)
 const remark = ref('')
+const images = ref<string[]>([])
+const orderId = ref<string | number>('')
+const submitting = ref(false)
 
-function onSubmit() {
+onLoad((q: any) => {
+  if (q?.id) orderId.value = q.id
+  if (q?.amount) {
+    maxAmount.value = Number(q.amount) || 0
+    refundAmount.value = maxAmount.value.toFixed(2)
+  }
+})
+
+function chooseImage() {
+  const remain = 3 - images.value.length
+  if (remain <= 0) return
+  uni.chooseImage({
+    count: remain,
+    sizeType: ['compressed'],
+    sourceType: ['album', 'camera'],
+    success: (res: any) => {
+      images.value = [...images.value, ...res.tempFilePaths].slice(0, 3)
+    }
+  })
+}
+
+function previewImage(idx: number) {
+  uni.previewImage({
+    current: idx,
+    urls: images.value
+  })
+}
+
+function deleteImage(idx: number) {
+  images.value.splice(idx, 1)
+}
+
+async function onSubmit() {
   if (!refundAmount.value || Number(refundAmount.value) <= 0) {
     return uni.showToast({ title: '请输入退款金额', icon: 'none' })
   }
   if (Number(refundAmount.value) > maxAmount.value) {
     return uni.showToast({ title: '退款金额不能超过订单金额', icon: 'none' })
   }
+  if (!orderId.value) {
+    return uni.showToast({ title: '订单信息缺失', icon: 'none' })
+  }
+
+  const reasonText = reasons.value[selectedReason.value] + (remark.value ? ` - ${remark.value}` : '')
+  submitting.value = true
   uni.showLoading({ title: '提交中...' })
-  setTimeout(() => {
+  try {
+    const res: any = await createRefund({
+      orderId: orderId.value,
+      reason: reasonText,
+      amount: Number(refundAmount.value),
+      images: images.value
+    })
     uni.hideLoading()
     uni.showToast({ title: '已提交申请', icon: 'success' })
-    setTimeout(() => uni.navigateBack(), 800)
-  }, 1000)
+    const refundId = res?.id || res?.refundNo || orderId.value
+    setTimeout(() => {
+      uni.redirectTo({ url: `/pages/refund/detail?id=${refundId}` })
+    }, 800)
+  } catch (e: any) {
+    uni.hideLoading()
+    uni.showToast({ title: e?.message || '提交失败', icon: 'none' })
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -81,6 +154,13 @@ function onSubmit() {
   font-weight: 600;
   margin-bottom: 14px;
   color: $text;
+}
+
+.sub-title {
+  font-size: 12px;
+  color: $text-muted;
+  font-weight: 400;
+  margin-left: 6px;
 }
 
 .reason-item {
@@ -146,6 +226,55 @@ textarea {
   height: 80px;
   font-size: 14px;
   color: $text;
+}
+
+.image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.image-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: $radius-md;
+  overflow: hidden;
+  background: $bg;
+}
+
+.upload-img {
+  width: 100%;
+  height: 100%;
+}
+
+.img-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: $text-muted;
+  border: 1px dashed $border;
+  background: #fff;
+}
+
+.upload-text {
+  font-size: 11px;
+  margin-top: 4px;
 }
 
 .submit-btn {

@@ -5,15 +5,19 @@
     </view>
 
     <view class="orders-tabs">
-      <view
-        v-for="(tab, idx) in tabs"
-        :key="idx"
-        :class="['orders-tab', activeIdx === idx && 'active']"
-        @tap="switchTab(idx)"
-      >
-        <text class="orders-tab-text">{{ tab }}</text>
-        <view class="orders-tab-line"></view>
-      </view>
+      <scroll-view scroll-x class="tabs-scroll" show-scrollbar="false">
+        <view class="tabs-wrap">
+          <view
+            v-for="(tab, idx) in tabs"
+            :key="idx"
+            :class="['orders-tab', activeIdx === idx && 'active']"
+            @tap="switchTab(idx)"
+          >
+            <text class="orders-tab-text">{{ tab }}</text>
+            <view class="orders-tab-line"></view>
+          </view>
+        </view>
+      </scroll-view>
     </view>
 
     <scroll-view scroll-y class="orders-body" :style="{ height: bodyHeight + 'px' }">
@@ -23,7 +27,7 @@
       </view>
 
       <template v-else>
-        <view v-if="activeIdx === 0" class="orders-shops">
+        <view v-if="activeIdx === 0 && visitedShops.length" class="orders-shops">
           <text class="orders-shops-title">买过的店</text>
           <scroll-view scroll-x class="orders-shops-scroll" show-scrollbar="false">
             <view class="orders-shops-list">
@@ -88,22 +92,6 @@
           </view>
         </view>
 
-        <view v-else-if="activeIdx === 1" class="orders-empty">
-          <view class="orders-empty-icon">
-            <CategoryIcon name="comment" :size="72" />
-          </view>
-          <text class="orders-empty-title">哇，订单全部都评论完了~</text>
-          <text class="orders-empty-subtitle">快去下单尝鲜吧</text>
-        </view>
-
-        <view v-else-if="activeIdx === 2" class="orders-empty">
-          <view class="orders-empty-icon">
-            <CategoryIcon name="refund" :size="72" />
-          </view>
-          <text class="orders-empty-title">暂无退款订单</text>
-          <text class="orders-empty-subtitle">购物无忧，售后有保障</text>
-        </view>
-
         <view v-else class="orders-empty">
           <view class="orders-empty-icon">
             <CategoryIcon name="ticket-empty" :size="72" />
@@ -126,17 +114,22 @@
 import { ref, computed } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useTabStore } from '@/store/tab'
+import { getOrderPage } from '@/api'
+import type { OrderVO } from '@/types/api'
 import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 import GlobalTabbar from '@/components/GlobalTabbar/GlobalTabbar.vue'
 
 const tabStore = useTabStore()
-const tabs = ref(['全部订单', '待评价', '退款/售后'])
+const tabs = ref(['待付款', '待接单', '配送中', '已完成', '待评价', '退款/售后', '全部'])
+const tabStatusMap = [0, 1, 5, 7, 6, 9, undefined]
 const activeIdx = ref(0)
 const loading = ref(false)
 const bodyHeight = ref(600)
+const rawOrders = ref<OrderVO[]>([])
 
 onShow(() => {
   tabStore.setActiveTab('/pages/order/list')
+  fetchOrders()
 })
 
 onLoad(() => {
@@ -147,128 +140,186 @@ onLoad(() => {
   })
 })
 
-const visitedShops = ref([
-  { id: 's1', name: '必胜客', count: 3, bg: 'linear-gradient(135deg, #FF6B6B, #FF4B33)' },
-  { id: 's2', name: '麦当劳', count: 5, bg: 'linear-gradient(135deg, #FFC300, #FF9900)' },
-  { id: 's3', name: '喜茶', count: 2, bg: 'linear-gradient(135deg, #00C853, #00B248)' },
-  { id: 's4', name: '海底捞', count: 1, bg: 'linear-gradient(135deg, #E53935, #C62828)' },
-  { id: 's5', name: '瑞幸咖啡', count: 4, bg: 'linear-gradient(135deg, #2196F3, #1976D2)' }
-])
+const visitedShops = ref<Array<{ id: number | string; name: string; count: number; bg: string }>>([])
 
-const allOrders = ref([
-  {
-    id: 'o1',
-    merchantName: '麦当劳（科技园店）',
-    merchantBg: 'linear-gradient(135deg, #FFC300, #FF9900)',
-    statusText: '已完成',
-    statusType: 'default',
-    dishName: '巨无霸套餐 + 麦辣鸡翅 + 可乐',
-    spec: '巨无霸去酱 / 中杯可乐加冰',
-    count: 3,
-    amount: '42.50',
-    time: '2026-06-17 12:30',
-    icon: 'package',
-    btns: [
-      { text: '评价', type: 'primary' },
-      { text: '再来一单', type: 'default' }
-    ]
-  },
-  {
-    id: 'o2',
-    merchantName: '喜茶（万象天地店）',
-    merchantBg: 'linear-gradient(135deg, #00C853, #00B248)',
-    statusText: '待评价',
-    statusType: 'warning',
-    dishName: '多肉葡萄 + 芝芝莓莓',
-    spec: '少冰 / 少糖',
-    count: 2,
-    amount: '38.00',
-    time: '2026-06-17 15:20',
-    icon: 'package',
-    btns: [
-      { text: '去评价', type: 'primary' },
-      { text: '再来一单', type: 'default' }
-    ]
-  },
-  {
-    id: 'o3',
-    merchantName: '海底捞火锅（海岸城店）',
-    merchantBg: 'linear-gradient(135deg, #E53935, #C62828)',
-    statusText: '退款中',
-    statusType: 'danger',
-    dishName: '麻辣锅底 + 招牌虾滑 + 肥牛卷',
-    spec: '中辣 / 3人份',
-    count: 5,
-    amount: '268.00',
-    time: '2026-06-16 19:00',
-    icon: 'refund',
-    btns: [
-      { text: '查看进度', type: 'primary' },
-      { text: '再来一单', type: 'default' }
-    ]
-  },
-  {
-    id: 'o4',
-    merchantName: '瑞幸咖啡（软件园店）',
-    merchantBg: 'linear-gradient(135deg, #2196F3, #1976D2)',
-    statusText: '已完成',
-    statusType: 'default',
-    dishName: '生椰拿铁',
-    spec: '大杯 / 去冰 / 不另外加糖',
-    count: 1,
-    amount: '18.90',
-    time: '2026-06-16 09:15',
-    icon: 'package',
-    btns: [
-      { text: '再来一单', type: 'default' }
-    ]
-  },
-  {
-    id: 'o5',
-    merchantName: '必胜客（中心城店）',
-    merchantBg: 'linear-gradient(135deg, #FF6B6B, #FF4B33)',
-    statusText: '已完成',
-    statusType: 'default',
-    dishName: '超级至尊披萨套餐',
-    spec: '9寸 / 铁盘 / 芝心',
-    count: 2,
-    amount: '99.00',
-    time: '2026-06-15 18:40',
-    icon: 'package',
-    btns: [
-      { text: '评价', type: 'primary' },
-      { text: '再来一单', type: 'default' }
-    ]
+const statusTextMap: Record<number, string> = {
+  0: '待付款',
+  1: '待接单',
+  2: '已接单',
+  3: '制作中',
+  4: '待取餐',
+  5: '配送中',
+  6: '已送达',
+  7: '已完成',
+  8: '已取消',
+  9: '退款中',
+  10: '已退款'
+}
+
+const statusTypeMap: Record<number, string> = {
+  0: 'warning',
+  1: 'warning',
+  2: 'warning',
+  3: 'warning',
+  4: 'warning',
+  5: 'danger',
+  6: 'success',
+  7: 'default',
+  8: 'muted',
+  9: 'danger',
+  10: 'muted'
+}
+
+const merchantBgList = [
+  'linear-gradient(135deg, #FF6B35, #FFC107)',
+  'linear-gradient(135deg, #4CAF50, #8BC34A)',
+  'linear-gradient(135deg, #E91E63, #FF8A65)',
+  'linear-gradient(135deg, #2196F3, #03A9F4)',
+  'linear-gradient(135deg, #9C27B0, #BA68C8)',
+  'linear-gradient(135deg, #FF5722, #FF8A65)',
+  'linear-gradient(135deg, #FFC107, #FFD54F)'
+]
+
+function merchantBg(id?: number) {
+  if (!id) return merchantBgList[0]
+  return merchantBgList[id % merchantBgList.length]
+}
+
+function buildDisplayOrder(order: OrderVO) {
+  const firstItem = order.items?.[0]
+  const itemNames = order.items?.map(it => it.dishName).filter(Boolean).join(' + ') || '商品'
+  const spec = [firstItem?.specName].filter(Boolean).join(' / ') || ''
+  const count = order.items?.reduce((sum, it) => sum + (it.quantity || 0), 0) || 0
+  const status = order.status ?? 7
+  const statusText = order.statusDesc || statusTextMap[status] || '已完成'
+  const statusType = statusTypeMap[status] || 'default'
+  const icon = status === 9 || status === 10 ? 'refund' : 'package'
+
+  const btns: { text: string; type: string }[] = []
+  if (status === 0) {
+    btns.push({ text: '取消订单', type: 'default' })
+    btns.push({ text: '去支付', type: 'primary' })
+  } else if (status === 1) {
+    btns.push({ text: '申请退款', type: 'default' })
+    btns.push({ text: '催单', type: 'primary' })
+  } else if (status === 5) {
+    btns.push({ text: '查看配送', type: 'default' })
+    btns.push({ text: '联系骑手', type: 'primary' })
+  } else if (status === 6 || status === 7) {
+    if (status === 6) btns.push({ text: '去评价', type: 'primary' })
+    else btns.push({ text: '再来一单', type: 'default' })
+    if (status === 7) btns.push({ text: '去评价', type: 'primary' })
+  } else if (status === 9) {
+    btns.push({ text: '撤销申请', type: 'default' })
+    btns.push({ text: '查看进度', type: 'primary' })
   }
-])
+
+  return {
+    id: order.id,
+    merchantName: order.merchantName || '未知商家',
+    merchantBg: merchantBg(order.merchantId),
+    statusText,
+    statusType,
+    dishName: itemNames,
+    spec,
+    count,
+    amount: order.payAmount?.toFixed(2) || '0.00',
+    time: order.createdAt || '',
+    icon,
+    btns,
+    raw: order
+  }
+}
+
+const displayOrders = computed(() => rawOrders.value.map(buildDisplayOrder))
 
 const filteredOrders = computed(() => {
-  if (activeIdx.value === 0) return allOrders.value
-  if (activeIdx.value === 1) return allOrders.value.filter(o => o.statusText === '待评价')
-  if (activeIdx.value === 2) return allOrders.value.filter(o => ['退款中', '已退款'].includes(o.statusText))
-  return allOrders.value
+  const status = tabStatusMap[activeIdx.value]
+  if (status === undefined) return displayOrders.value
+  if (status === 9) {
+    return displayOrders.value.filter(o => o.raw.status === 9 || o.raw.status === 10)
+  }
+  return displayOrders.value.filter(o => o.raw.status === status)
 })
+
+async function fetchOrders() {
+  if (loading.value) return
+  loading.value = true
+  try {
+    const status = tabStatusMap[activeIdx.value]
+    const params: { status?: number; current: number; size: number } = { current: 1, size: 20 }
+    if (status !== undefined) params.status = status
+    const res = await getOrderPage(params)
+    rawOrders.value = res.list || []
+    if (activeIdx.value === 0) {
+      await loadVisitedShops()
+    }
+  } catch (e: any) {
+    uni.showToast({ title: e?.message || '加载失败', icon: 'none' })
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadVisitedShops() {
+  try {
+    const res = await getOrderPage({ current: 1, size: 50 })
+    const orders = res.list || []
+    const map = new Map<number, { id: number; name: string; count: number }>()
+    orders.forEach((o: OrderVO) => {
+      if (!o.merchantId) return
+      const existing = map.get(o.merchantId)
+      if (existing) {
+        existing.count += 1
+      } else {
+        map.set(o.merchantId, { id: o.merchantId, name: o.merchantName || '未知商家', count: 1 })
+      }
+    })
+    visitedShops.value = Array.from(map.values()).slice(0, 10).map((s) => ({
+      ...s,
+      bg: merchantBg(s.id)
+    }))
+  } catch (e) {
+    console.error('加载买过的店失败', e)
+    visitedShops.value = []
+  }
+}
 
 function switchTab(idx: number) {
   if (activeIdx.value === idx || loading.value) return
   activeIdx.value = idx
-  loading.value = true
-  setTimeout(() => {
-    loading.value = false
-  }, 800)
+  fetchOrders()
 }
 
-function goDetail(id: string) {
+function goDetail(id: string | number) {
   uni.navigateTo({ url: `/pages/order/detail?id=${id}` })
 }
 
 function onBtnClick(order: any, btn: any) {
+  const id = order.id
   if (btn.text === '再来一单') {
     uni.showToast({ title: '已加入购物车', icon: 'none' })
-  } else if (btn.text === '评价' || btn.text === '去评价') {
-    uni.showToast({ title: '跳转评价页面', icon: 'none' })
+  } else if (btn.text === '去支付') {
+    uni.navigateTo({ url: `/pages/order/payment?id=${id}&amount=${order.raw.payAmount}` })
+  } else if (btn.text === '申请退款') {
+    uni.navigateTo({ url: `/pages/order/refund?id=${id}&amount=${order.raw.payAmount}` })
   } else if (btn.text === '查看进度') {
-    uni.showToast({ title: '查看退款进度', icon: 'none' })
+    uni.navigateTo({ url: `/pages/refund/detail?id=${id}` })
+  } else if (btn.text === '查看配送') {
+    uni.navigateTo({ url: `/pages/order/delivery?id=${id}` })
+  } else if (btn.text === '联系骑手') {
+    const phone = order.raw.riderPhone
+    if (phone) {
+      uni.makePhoneCall({ phoneNumber: phone })
+    } else {
+      uni.showToast({ title: '暂无骑手联系方式', icon: 'none' })
+    }
+  } else if (btn.text === '去评价') {
+    uni.navigateTo({ url: `/pages/order/rating?id=${id}&merchantId=${order.raw.merchantId}` })
+  } else if (btn.text === '撤销申请') {
+    uni.showToast({ title: '请在退款详情页操作', icon: 'none' })
+  } else if (btn.text === '催单') {
+    uni.showToast({ title: '已催促商家尽快处理', icon: 'none' })
   } else {
     uni.showToast({ title: btn.text, icon: 'none' })
   }
@@ -298,17 +349,22 @@ function onBtnClick(order: any, btn: any) {
 }
 
 .orders-tabs {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
   background: $card;
-  padding: 0 16px;
   border-bottom: 1px solid $border;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+}
+
+.tabs-wrap {
+  display: inline-flex;
+  padding: 0 12px;
 }
 
 .orders-tab {
   position: relative;
-  padding: 14px 8px;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -318,6 +374,7 @@ function onBtnClick(order: any, btn: any) {
   font-size: 14px;
   color: $text-light;
   transition: color 0.2s;
+  white-space: nowrap;
 }
 
 .orders-tab-line {

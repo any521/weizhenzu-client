@@ -89,6 +89,7 @@ const icons: Record<string, string> = {
   close: `<circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2.5"/><path d="M17 17l14 14M31 17L17 31" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`,
   'ticket-empty': `<path d="M10 10h28v10a4 4 0 0 1 0 8 4 4 0 0 1 0 8v2H10V10Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="5" stroke="currentColor" stroke-width="2.5"/><path d="M14 18h6M14 30h6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`,
   user: `<circle cx="24" cy="16" r="6" stroke="currentColor" stroke-width="2.5"/><path d="M12 38c2-6 7-10 12-10s10 4 12 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`,
+  camera: `<rect x="8" y="12" width="32" height="24" rx="4" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="24" r="7" stroke="currentColor" stroke-width="2.5"/><circle cx="36" cy="18" r="2" fill="currentColor"/>`,
 }
 
 const path = computed(() => icons[props.name] || icons.more)

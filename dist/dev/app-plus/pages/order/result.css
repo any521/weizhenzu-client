@@ -40,6 +40,35 @@
   color: #999999;
   margin-top: 8px;
 }
+.order-card[data-v-865bb626] {
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 32px;
+  box-shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
+}
+.order-row[data-v-865bb626] {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #FFE5E5;
+}
+.order-row[data-v-865bb626]:last-child {
+  border-bottom: none;
+}
+.order-label[data-v-865bb626] {
+  color: #666666;
+}
+.order-value[data-v-865bb626] {
+  color: #333333;
+  font-weight: 500;
+}
+.order-value.price[data-v-865bb626] {
+  color: #FF4B33;
+  font-weight: 700;
+}
 .actions[data-v-865bb626] {
   display: flex;
   gap: 16px;

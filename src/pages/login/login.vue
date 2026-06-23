@@ -25,33 +25,43 @@
             {{ countdown > 0 ? `${countdown}s 后重发` : '获取验证码' }}
           </view>
         </view>
-        <view class="submit-btn" @tap="onSmsLogin">登 录</view>
+        <view :class="['submit-btn', !agreed && 'submit-disabled']" @tap="onSmsLogin">登 录</view>
         <view class="hint">未注册的手机号将自动创建账号</view>
       </view>
 
       <!-- 密码登录 -->
       <view v-else class="form">
         <view class="form-item">
-          <text class="form-label">手机号</text>
-          <input v-model="phone" class="form-input" type="number" maxlength="11" placeholder="请输入手机号" />
+          <text class="form-label">账号</text>
+          <input v-model="phone" class="form-input" maxlength="32" placeholder="手机号或用户名" />
         </view>
         <view class="form-item">
           <text class="form-label">密码</text>
           <input v-model="password" class="form-input" :type="showPwd ? 'text' : 'password'" placeholder="请输入密码" />
           <view class="sms-btn" @tap="showPwd = !showPwd">{{ showPwd ? '隐藏' : '显示' }}</view>
         </view>
-        <view class="submit-btn" @tap="onPwdLogin">登 录</view>
+        <view :class="['submit-btn', !agreed && 'submit-disabled']" @tap="onPwdLogin">登 录</view>
       </view>
     </view>
 
-    <view class="footer">登录即代表同意《用户协议》《隐私政策》</view>
+    <view class="agreement">
+      <view :class="['agree-box', agreed && 'agree-active']" @tap="agreed = !agreed">
+        <CategoryIcon v-if="agreed" name="check" :size="10" />
+      </view>
+      <text>我已阅读并同意</text>
+      <text class="agree-link" @tap="openAgreement('用户协议')">《用户协议》</text>
+      <text class="agree-link" @tap="openAgreement('隐私政策')">《隐私政策》</text>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user'
-import { MOCK_USER } from '@/mock'
+import { sendSmsCode } from '@/api'
+import { isMobile } from '@/utils/validator'
+import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 
 const mode = ref<'sms' | 'pwd'>('sms')
 const phone = ref('')
@@ -59,44 +69,76 @@ const code = ref('')
 const password = ref('')
 const showPwd = ref(false)
 const countdown = ref(0)
+const agreed = ref(false)
+const redirect = ref('')
 const userStore = useUserStore()
 
 let timer: any = null
 
-function isValidPhone(p: string) { return /^1[3-9]\d{9}$/.test(p) }
+onLoad((q: any) => {
+  redirect.value = q?.redirect || '/pages/profile/index'
+})
 
-function onSendCode() {
+function isValidPhone(p: string) { return isMobile(p) }
+
+async function onSendCode() {
   if (countdown.value > 0) return
   if (!isValidPhone(phone.value)) {
     return uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
   }
-  uni.showToast({ title: '验证码已发送', icon: 'success' })
-  countdown.value = 60
-  timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) { clearInterval(timer); timer = null }
-  }, 1000)
+  try {
+    await sendSmsCode(phone.value, 'LOGIN')
+    uni.showToast({ title: '验证码已发送', icon: 'success' })
+    countdown.value = 60
+    timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) { clearInterval(timer); timer = null }
+    }, 1000)
+  } catch (e) {
+    console.error('发送验证码失败', e)
+  }
 }
 
 function onSmsLogin() {
+  if (!agreed.value) return uni.showToast({ title: '请先同意用户协议和隐私政策', icon: 'none' })
   if (!isValidPhone(phone.value)) return uni.showToast({ title: '手机号格式错误', icon: 'none' })
   if (!code.value) return uni.showToast({ title: '请输入验证码', icon: 'none' })
   doLogin()
 }
 
+function isValidAccount(account: string) {
+  return isValidPhone(account) || /^[a-zA-Z0-9_]{2,32}$/.test(account)
+}
+
 function onPwdLogin() {
-  if (!isValidPhone(phone.value)) return uni.showToast({ title: '手机号格式错误', icon: 'none' })
+  if (!agreed.value) return uni.showToast({ title: '请先同意用户协议和隐私政策', icon: 'none' })
+  if (!isValidAccount(phone.value)) return uni.showToast({ title: '请输入正确的手机号或用户名', icon: 'none' })
   if (!password.value) return uni.showToast({ title: '请输入密码', icon: 'none' })
   doLogin()
 }
 
-function doLogin() {
-  // 模拟登录成功，使用 Mock 用户数据
-  const user = { ...MOCK_USER, token: 'mock_token_' + Date.now() }
-  userStore.userInfo.value = user
-  uni.setStorageSync('wzz_user_info', user)
-  uni.showToast({ title: '登录成功', icon: 'success' })
-  setTimeout(() => uni.reLaunch({ url: '/pages/profile/index' }), 600)
+async function doLogin() {
+  try {
+    if (mode.value === 'sms') {
+      await userStore.loginBySms(phone.value, code.value)
+    } else {
+      await userStore.loginByPassword(phone.value, password.value)
+    }
+    uni.showToast({ title: '登录成功', icon: 'success' })
+    setTimeout(() => {
+      if (redirect.value.startsWith('/pages/index/index') || redirect.value.startsWith('/pages/coupon/index') || redirect.value.startsWith('/pages/order/list') || redirect.value.startsWith('/pages/profile/index')) {
+        uni.switchTab({ url: redirect.value })
+      } else {
+        uni.reLaunch({ url: redirect.value })
+      }
+    }, 600)
+  } catch (e) {
+    console.error('登录失败', e)
+  }
+}
+
+function openAgreement(title: string) {
+  uni.showModal({ title, content: `此处为《${title}》内容示例，实际应由运营配置。`, showCancel: false })
 }
 </script>
 
@@ -154,4 +196,40 @@ function doLogin() {
 .hint { text-align: center; font-size: 12px; color: $text-muted; margin-top: 12px; }
 
 .footer { text-align: center; font-size: 11px; color: $text-muted; margin-top: 32px; }
+
+.submit-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.agreement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 24px;
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.agree-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid $text-muted;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agree-active {
+  background: $primary;
+  border-color: $primary;
+}
+
+.agree-link {
+  color: $primary;
+}
 </style>

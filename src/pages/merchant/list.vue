@@ -6,42 +6,64 @@
         v-for="(chip, idx) in chips"
         :key="idx"
         :class="['filter-chip', activeChip === idx && 'active']"
-        @tap="activeChip = idx"
-      >{{ chip }}</text>
+        @tap="onChip(idx)"
+      >{{ chip.label }}</text>
       <text class="filter-more">筛选 ▾</text>
     </view>
 
-    <!-- 商品行列表 -->
-    <scroll-view scroll-y class="product-list" :style="{ height: contentHeight + 'px' }">
-      <view
-        v-for="d in dishes"
-        :key="d.id"
-        class="product-row"
-        @tap="goDish(d.id)"
-      >
-        <view class="product-thumb" :style="{ background: d.bg }"></view>
-        <view class="product-body">
-          <view class="product-name">{{ d.name }}</view>
-          <view class="product-sales">月售 {{ d.sales }} · 好评 {{ d.rating }}%</view>
-          <view class="product-tags" v-if="d.tags.length">
-            <text v-for="(tag, idx) in d.tags" :key="idx" :class="['tag', `tag-${tag.type}`]">{{ tag.text }}</text>
+    <scroll-view
+      scroll-y
+      class="merchant-list"
+      :style="{ height: contentHeight + 'px' }"
+      @scrolltolower="loadMore"
+    >
+      <view v-if="loading" class="loading-wrap">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">加载中...</text>
+      </view>
+
+      <view v-else-if="!list.length" class="empty-wrap">
+        <AppEmpty icon="ticket-empty" title="暂无商家" subtitle="换个条件试试吧" />
+      </view>
+
+      <view v-else class="list-body">
+        <view
+          v-for="m in list"
+          :key="m.id"
+          class="merchant-card"
+          @tap="goDetail(m.id)"
+        >
+          <view class="merchant-img" :style="{ background: m.bg }">
+            <text class="logo-text">{{ m.logo }}</text>
           </view>
-          <view class="product-bottom">
-            <view class="product-price">
-              ¥{{ d.price }}
-              <text v-if="d.originalPrice" class="old">¥{{ d.originalPrice }}</text>
+          <view class="merchant-info">
+            <view class="merchant-name-row">
+              <text>{{ m.name }}</text>
+              <CategoryIcon v-if="m.top" name="star" :size="10" class="top-star" />
             </view>
-            <view class="product-action" @tap.stop>
-              <template v-if="d.qty > 0">
-                <text class="qty-btn minus" @tap="onDec(d)">−</text>
-                <text class="qty-num">{{ d.qty }}</text>
-                <text class="qty-btn plus" @tap="onInc(d)">+</text>
-              </template>
-              <view v-else class="add-btn-primary" @tap="onInc(d)">+ 加入</view>
+            <view class="merchant-meta">
+              <text class="meta-score">
+                <CategoryIcon name="star" :size="9" /> {{ m.rating }}
+              </text>
+              <text>月售 {{ m.monthlySales > 999 ? '1000+' : m.monthlySales }}</text>
+              <text class="meta-right">{{ m.deliveryTime }} · {{ m.distance || '' }}</text>
             </view>
+            <view class="merchant-fees">
+              <text>起送 ¥{{ m.minOrder }}</text>
+              <text>配送约¥{{ m.deliveryFee }}</text>
+            </view>
+            <view v-if="m.tags?.length" class="merchant-tags">
+              <text
+                v-for="(tag, idx) in m.tags"
+                :key="idx"
+                :class="['tag', `tag-${tag.type}`]"
+              >{{ tag.text }}</text>
+            </view>
+            <view v-if="m.promo" class="merchant-promo">{{ m.promo }}</view>
           </view>
         </view>
       </view>
+
       <view style="height: 20px;"></view>
     </scroll-view>
   </view>
@@ -50,31 +72,64 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { MOCK_DISHES } from '@/mock'
+import { getMerchantPage } from '@/api'
+import type { MerchantCardVO } from '@/types/api'
+import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
+import AppEmpty from '@/components/AppEmpty/AppEmpty.vue'
 
-const dishes = ref(MOCK_DISHES.map(d => ({ ...d })))
-const chips = ref(['综合排序', '销量优先', '距离最近', '价格'])
+const chips = [
+  { label: '综合排序', value: '' },
+  { label: '销量优先', value: 'sales' },
+  { label: '距离最近', value: 'distance' },
+  { label: '评分最高', value: 'rating' },
+]
 const activeChip = ref(0)
+const list = ref<MerchantCardVO[]>([])
+const loading = ref(false)
 const contentHeight = ref(600)
+const categoryId = ref<number>()
+const keyword = ref('')
 
 onLoad((q: any) => {
-  uni.setNavigationBarTitle({ title: q?.name || '商家列表' })
+  categoryId.value = q?.categoryId ? Number(q.categoryId) : undefined
+  keyword.value = q?.keyword ? decodeURIComponent(q.keyword) : ''
+  uni.setNavigationBarTitle({
+    title: q?.name || (keyword.value ? '搜索结果' : '商家列表'),
+  })
   uni.getSystemInfo({
     success: (res: any) => {
       contentHeight.value = res.windowHeight - 50
-    }
+    },
   })
+  load()
 })
 
-function onInc(d: any) {
-  d.qty++
-  uni.showToast({ title: '已加入购物车', icon: 'success' })
+async function load() {
+  loading.value = true
+  try {
+    const params: Record<string, any> = { current: 1, size: 20 }
+    if (categoryId.value) params.categoryId = categoryId.value
+    if (keyword.value) params.keyword = keyword.value
+    const page = await getMerchantPage(params)
+    list.value = page.list
+  } catch (e) {
+    console.error('加载商家列表失败', e)
+  } finally {
+    loading.value = false
+  }
 }
-function onDec(d: any) {
-  if (d.qty > 0) d.qty--
+
+function onChip(idx: number) {
+  activeChip.value = idx
+  load()
 }
-function goDish(id: number) {
-  uni.navigateTo({ url: `/pages/dish/detail?id=${id}` })
+
+function loadMore() {
+  // 当前先做一次性加载，后续可扩展分页
+}
+
+function goDetail(id: number) {
+  uni.navigateTo({ url: `/pages/merchant/detail?id=${id}` })
 }
 </script>
 
@@ -114,137 +169,153 @@ function goDish(id: number) {
   color: $text-muted;
 }
 
-.product-list {
+.merchant-list {
   background: $bg;
 }
 
-.product-row {
-  background: #fff;
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 120px;
+}
+
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba($primary, 0.25);
+  border-top-color: $primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
   margin-top: 8px;
-  padding: 12px 16px;
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.empty-wrap {
+  padding-top: 60px;
+}
+
+.list-body {
+  padding: 0 16px;
+}
+
+.merchant-card {
   display: flex;
   gap: 12px;
+  padding: 14px 0;
   border-bottom: 1px solid $border;
 }
 
-.product-thumb {
+.merchant-card:last-child {
+  border-bottom: none;
+}
+
+.merchant-img {
   width: 76px;
   height: 76px;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-.product-body {
+.logo-text {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.merchant-info {
   flex: 1;
   min-width: 0;
 }
 
-.product-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
+.merchant-name-row {
+  font-size: 15px;
+  font-weight: 700;
+  color: $text;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.top-star {
+  color: $primary;
+}
+
+.merchant-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: $text-muted;
   margin-bottom: 4px;
 }
 
-.product-sales {
+.meta-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: $secondary;
+  font-weight: 700;
+}
+
+.meta-right {
+  margin-left: auto;
+}
+
+.merchant-fees {
+  display: flex;
+  gap: 10px;
   font-size: 11px;
   color: $text-muted;
   margin-bottom: 6px;
 }
 
-.product-tags {
+.merchant-tags {
   display: flex;
   gap: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .tag {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 1px 5px;
+  border-radius: 3px;
   font-size: 10px;
   font-weight: 600;
 }
 
 .tag-primary {
-  background: rgba(255, 107, 53, 0.1);
-  color: $primary;
-}
-
-.tag-warning {
-  background: rgba(255, 152, 0, 0.1);
-  color: $warning;
+  background: rgba(255, 75, 51, 0.08);
+  color: $secondary;
 }
 
 .tag-success {
-  background: rgba(76, 175, 80, 0.1);
+  background: rgba(0, 200, 83, 0.08);
   color: $success;
 }
 
-.product-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.tag-warning {
+  background: rgba(255, 152, 0, 0.08);
+  color: $warning;
 }
 
-.product-price {
-  color: $primary;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.product-price .old {
-  color: #999;
+.merchant-promo {
   font-size: 11px;
-  text-decoration: line-through;
-  margin-left: 4px;
-  font-weight: 400;
+  color: $secondary;
 }
 
-.product-action {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.qty-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.qty-btn.minus {
-  border: 1px solid $primary;
-  background: #fff;
-  color: $primary;
-}
-
-.qty-btn.plus {
-  background: $primary;
-  color: #fff;
-}
-
-.qty-num {
-  min-width: 24px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.add-btn-primary {
-  background: linear-gradient(135deg, $primary, $primary-light);
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 14px;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

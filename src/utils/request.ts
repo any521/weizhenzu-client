@@ -1,15 +1,22 @@
 /**
  * 统一 API 请求封装 - 微信小程序 / H5 / App 通用
  * 基于 Promise 化的 uni.request
+ *
+ * 特性：
+ * 1. 从 import.meta.env 读取 BASE_URL / UPLOAD_URL
+ * 2. 自动注入 Authorization 与 X-Trace-Id
+ * 3. 401 时自动刷新 token 并重试原请求
+ * 4. 请求取消机制（cancelRequest / cancelAllRequests）
+ * 5. 网络 / HTTP / 业务错误统一提示
  */
 
-const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080'
+import { handleApiError } from './errorHandler'
+import { ErrorCode, type ApiResult, type LoginVO } from '@/types/api'
 
-export interface ApiResult<T = any> {
-  code: number
-  message: string
-  data: T
-}
+const env = (import.meta as any).env || {}
+
+export const BASE_URL = (env.VITE_API_BASE_URL as string) || 'http://localhost:8080'
+export const UPLOAD_BASE_URL = (env.VITE_UPLOAD_BASE_URL as string) || `${BASE_URL}/api/public/files`
 
 export interface ApiOptions {
   url: string
@@ -18,57 +25,246 @@ export interface ApiOptions {
   header?: Record<string, string>
   showLoading?: boolean
   loadingText?: string
+  /** 请求唯一标识，用于取消请求 */
+  id?: string
+  /** 内部标记：是否为刷新 token 后的重试请求 */
+  _retry?: boolean
 }
 
 const TOKEN_KEY = 'wzz_token'
+const REFRESH_TOKEN_KEY = 'wzz_refresh_token'
 
 export const getToken = () => uni.getStorageSync(TOKEN_KEY) || ''
 export const setToken = (t: string) => uni.setStorageSync(TOKEN_KEY, t)
 export const clearToken = () => uni.removeStorageSync(TOKEN_KEY)
 
+export const getRefreshToken = () => uni.getStorageSync(REFRESH_TOKEN_KEY) || ''
+export const setRefreshToken = (t: string) => uni.setStorageSync(REFRESH_TOKEN_KEY, t)
+export const clearRefreshToken = () => uni.removeStorageSync(REFRESH_TOKEN_KEY)
+
+interface PendingRequest {
+  task: UniApp.RequestTask
+  reject: (reason?: any) => void
+}
+
+const pendingRequests = new Map<string, PendingRequest>()
+
+let isRefreshing = false
+let refreshQueue: Array<{ resolve: (token: string) => void; reject: (reason?: any) => void }> = []
+
+function generateTraceId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+function generateReqId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+}
+
+function removePending(id: string) {
+  pendingRequests.delete(id)
+}
+
+function clearAuthAndGoLogin(message = '请重新登录') {
+  clearToken()
+  clearRefreshToken()
+  uni.removeStorageSync('wzz_user_info')
+  uni.showToast({ title: message, icon: 'none' })
+  setTimeout(() => uni.reLaunch({ url: '/pages/login/login' }), 800)
+}
+
+/**
+ * 刷新 token 核心逻辑
+ * 同一时间只发起一次刷新请求，其余请求排队等待新 token
+ */
+function doRefresh(): Promise<string> {
+  const rt = getRefreshToken()
+  if (!rt) {
+    return Promise.reject(new Error('no refresh token'))
+  }
+
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => refreshQueue.push({ resolve, reject }))
+  }
+
+  isRefreshing = true
+
+  return new Promise<string>((resolve, reject) => {
+    uni.request({
+      url: BASE_URL + '/api/user/auth/refresh',
+      method: 'POST',
+      data: { refreshToken: rt },
+      header: {
+        'Content-Type': 'application/json',
+        'X-Trace-Id': generateTraceId(),
+      },
+      success: (res) => {
+        const body = (res.data as ApiResult<LoginVO>) || ({} as ApiResult<LoginVO>)
+        if (res.statusCode === 200 && body.code === ErrorCode.SUCCESS && body.data?.token && body.data?.refreshToken) {
+          setToken(body.data.token)
+          setRefreshToken(body.data.refreshToken)
+          resolve(body.data.token)
+        } else {
+          reject(new Error(body.message || 'refresh failed'))
+        }
+      },
+      fail: (err) => reject(err),
+      complete: () => {
+        isRefreshing = false
+      },
+    })
+  })
+    .then((token) => {
+      const queue = refreshQueue
+      refreshQueue = []
+      queue.forEach((p) => p.resolve(token))
+      return token
+    })
+    .catch((err) => {
+      const queue = refreshQueue
+      refreshQueue = []
+      queue.forEach((p) => p.reject(err))
+      throw err
+    })
+}
+
 /**
  * 核心请求方法
  */
 export function request<T = any>(options: ApiOptions): Promise<T> {
-  const { url, method = 'GET', data, header = {}, showLoading = false, loadingText = '加载中' } = options
+  const {
+    url,
+    method = 'GET',
+    data,
+    header = {},
+    showLoading = false,
+    loadingText = '加载中',
+    id = generateReqId(),
+    _retry = false,
+  } = options
 
   if (showLoading) uni.showLoading({ title: loadingText, mask: true })
 
   const token = getToken()
+  const fullUrl = url.startsWith('http') ? url : BASE_URL + url
+  const traceId = generateTraceId()
+
   return new Promise<T>((resolve, reject) => {
-    uni.request({
-      url: url.startsWith('http') ? url : BASE_URL + url,
+    const task = uni.request({
+      url: fullUrl,
       method,
       data,
       header: {
         'Content-Type': 'application/json',
+        'X-Trace-Id': traceId,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...header
+        ...header,
       },
-      success: (res: any) => {
+      success: async (res) => {
+        removePending(id)
         if (showLoading) uni.hideLoading()
-        const body: ApiResult<T> = res.data || {}
-        if (body.code === 200) {
+
+        const status = res.statusCode
+        const body = (res.data as ApiResult<T>) || ({} as ApiResult<T>)
+
+        // 业务成功
+        if (status >= 200 && status < 300 && body.code === ErrorCode.SUCCESS) {
           resolve(body.data)
-        } else if (body.code === 401 || body.code === 10004) {
-          // 登录态失效
-          clearToken()
-          uni.removeStorageSync('wzz_user_info')
-          uni.showToast({ title: '请重新登录', icon: 'none' })
-          setTimeout(() => uni.reLaunch({ url: '/pages/login/login' }), 800)
-          reject(body)
-        } else {
-          uni.showToast({ title: body.message || '请求失败', icon: 'none' })
-          reject(body)
+          return
         }
+
+        // 账号被禁用：直接登出，不进行 token 刷新
+        if (body.code === ErrorCode.ACCOUNT_DISABLED) {
+          clearAuthAndGoLogin('账号已被禁用，请联系客服')
+          reject(body)
+          return
+        }
+
+        // 认证失效：刷新 token 并重试（仅允许重试一次，防止死循环）
+        const isAuthError =
+          status === 401 || body.code === ErrorCode.UNAUTHORIZED || body.code === ErrorCode.TOKEN_EXPIRED
+
+        if (isAuthError) {
+          if (_retry) {
+            clearAuthAndGoLogin('登录已过期，请重新登录')
+            reject(body)
+            return
+          }
+
+          const refreshTokenExists = !!getRefreshToken()
+          if (refreshTokenExists) {
+            try {
+              await doRefresh()
+              const retried = await request<T>({ ...options, id: generateReqId(), _retry: true })
+              resolve(retried)
+              return
+            } catch (e) {
+              clearAuthAndGoLogin('登录已过期，请重新登录')
+              reject(e)
+              return
+            }
+          } else {
+            clearAuthAndGoLogin('请先登录')
+            reject(body)
+            return
+          }
+        }
+
+        // 业务错误 / HTTP 错误统一提示
+        const err =
+          status >= 200 && status < 300
+            ? { type: 'business' as const, code: body.code, message: body.message || '请求失败' }
+            : { type: 'http' as const, statusCode: status, message: body.message || `请求失败（${status}）` }
+
+        handleApiError(err)
+        reject(err)
       },
       fail: (err) => {
+        removePending(id)
         if (showLoading) uni.hideLoading()
-        uni.showToast({ title: '网络异常', icon: 'none' })
-        reject(err)
-      }
+
+        const errMsg = (err as any).errMsg || ''
+        if (errMsg.includes('abort')) {
+          reject({ type: 'cancel', message: '请求已取消' })
+          return
+        }
+
+        const networkErr = { type: 'network' as const, raw: err, message: errMsg || '网络异常' }
+        handleApiError(networkErr)
+        reject(networkErr)
+      },
     })
+
+    pendingRequests.set(id, { task, reject })
   })
+}
+
+/**
+ * 取消指定请求
+ */
+export function cancelRequest(id?: string) {
+  if (!id) {
+    cancelAllRequests()
+    return
+  }
+  const p = pendingRequests.get(id)
+  if (p) {
+    p.task.abort()
+    pendingRequests.delete(id)
+  }
+}
+
+/**
+ * 取消所有正在进行的请求
+ */
+export function cancelAllRequests() {
+  pendingRequests.forEach((p) => {
+    try {
+      p.task.abort()
+    } catch (e) {
+      // ignore
+    }
+  })
+  pendingRequests.clear()
 }
 
 /**

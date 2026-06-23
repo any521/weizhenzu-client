@@ -25,6 +25,14 @@
   font-size: 12px;
   opacity: 0.85;
 }
+.countdown[data-v-bd8d4c0c] {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  font-size: 12px;
+}
 .pay-methods[data-v-bd8d4c0c] {
   background: #fff;
   margin: 16px;
@@ -46,6 +54,9 @@
 .pay-item[data-v-bd8d4c0c]:last-child {
   border-bottom: none;
 }
+.pay-disabled[data-v-bd8d4c0c] {
+  opacity: 0.5;
+}
 .pay-icon[data-v-bd8d4c0c] {
   font-size: 28px;
   margin-right: 14px;
@@ -62,6 +73,7 @@
   font-size: 11px;
   color: #999999;
   margin-top: 2px;
+  display: block;
 }
 .pay-radio[data-v-bd8d4c0c] {
   width: 22px;
@@ -92,4 +104,16 @@
   font-weight: 600;
   border-radius: 25px;
   box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
+}
+.pay-btn-disabled[data-v-bd8d4c0c] {
+  opacity: 0.6;
+}
+.alipay-webview[data-v-bd8d4c0c] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  z-index: 200;
 }

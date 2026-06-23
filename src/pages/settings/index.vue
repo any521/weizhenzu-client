@@ -14,22 +14,42 @@
     <!-- 设置列表 -->
     <view class="settings-body">
       <view class="group">
-        <view v-for="item in generalSettings" :key="item.text" class="cell" @tap="onTap(item.text)">
-          <text class="cell-text">{{ item.text }}</text>
+        <view class="cell" @tap="goProfile">
+          <text class="cell-text">个人资料</text>
           <view class="cell-right">
-            <text v-if="item.sub" class="cell-sub">{{ item.sub }}</text>
+            <text class="cell-sub">编辑</text>
             <text class="cell-arrow">›</text>
           </view>
         </view>
       </view>
 
       <view class="group">
-        <view v-for="item in accountSettings" :key="item.text" class="cell" @tap="onTap(item.text)">
-          <text class="cell-text">{{ item.text }}</text>
+        <view class="cell" @tap="openAgreement('用户协议')">
+          <text class="cell-text">用户协议</text>
           <view class="cell-right">
-            <text v-if="item.sub" class="cell-sub">{{ item.sub }}</text>
             <text class="cell-arrow">›</text>
           </view>
+        </view>
+        <view class="cell" @tap="openAgreement('隐私政策')">
+          <text class="cell-text">隐私政策</text>
+          <view class="cell-right">
+            <text class="cell-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="group">
+        <view class="cell">
+          <text class="cell-text">订单通知</text>
+          <switch :checked="notify.order" @change="e => toggleNotify('order', e)" color="#FF6B35" />
+        </view>
+        <view class="cell">
+          <text class="cell-text">优惠活动</text>
+          <switch :checked="notify.promo" @change="e => toggleNotify('promo', e)" color="#FF6B35" />
+        </view>
+        <view class="cell">
+          <text class="cell-text">系统消息</text>
+          <switch :checked="notify.system" @change="e => toggleNotify('system', e)" color="#FF6B35" />
         </view>
       </view>
 
@@ -37,45 +57,99 @@
         <view class="cell" @tap="onClearCache">
           <text class="cell-text">清除缓存</text>
           <view class="cell-right">
-            <text class="cell-sub">12.5MB</text>
+            <text class="cell-sub">{{ cacheSize }}</text>
             <text class="cell-arrow">›</text>
           </view>
         </view>
-        <view class="cell cell-danger" @tap="onLogout">
-          <text class="cell-text">退出登录</text>
+        <view class="cell" @tap="onAbout">
+          <text class="cell-text">关于我们</text>
           <view class="cell-right">
+            <text class="cell-sub">v1.0.0</text>
             <text class="cell-arrow">›</text>
           </view>
         </view>
       </view>
+
+      <view class="logout-btn" @tap="onLogout">退出登录</view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-const generalSettings = [
-  { text: '聊天', sub: '' },
-  { text: '禁止代下单设置', sub: '' }
-]
+import { reactive, ref, onMounted } from 'vue'
+import { useUserStore } from '@/store/user'
 
-const accountSettings = [
-  { text: '账号与安全', sub: '' },
-  { text: '支付设置', sub: '' },
-  { text: '消息通知', sub: '' },
-  { text: '隐私管理', sub: '' },
-  { text: '关于我们', sub: 'v1.0.0' }
-]
+const userStore = useUserStore()
+const notify = reactive({ order: true, promo: true, system: true })
+const cacheSize = ref('0KB')
+
+function formatSize(bytes: number): string {
+  if (bytes <= 0) return '0KB'
+  if (bytes < 1024) return `${bytes}B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`
+}
+
+function refreshCacheSize() {
+  try {
+    const info = uni.getStorageInfoSync()
+    cacheSize.value = formatSize(info.currentSize * 1024)
+  } catch (e) {
+    cacheSize.value = '0KB'
+  }
+}
+
+onMounted(() => {
+  refreshCacheSize()
+})
 
 function goBack() {
   uni.navigateBack()
 }
 
-function onTap(text: string) {
-  uni.showToast({ title: `${text} 开发中`, icon: 'none' })
+function goProfile() {
+  uni.showToast({ title: '个人资料编辑开发中', icon: 'none' })
+}
+
+function openAgreement(title: string) {
+  uni.showModal({ title, content: `此处为《${title}》内容示例，实际应由运营配置。`, showCancel: false })
+}
+
+function toggleNotify(key: keyof typeof notify, e: any) {
+  notify[key] = !!e.detail.value
 }
 
 function onClearCache() {
-  uni.showToast({ title: '清除缓存成功', icon: 'none' })
+  uni.showModal({
+    title: '清除缓存',
+    content: '确定清除本地缓存吗？',
+    success: (res) => {
+      if (res.confirm) {
+        // 保留登录态相关 storage
+        const keepKeys = ['wzz_token', 'wzz_refresh_token', 'wzz_user_info']
+        try {
+          const info = uni.getStorageInfoSync()
+          info.keys.forEach((k: string) => {
+            if (!keepKeys.includes(k)) {
+              uni.removeStorageSync(k)
+            }
+          })
+        } catch (e) {
+          // ignore
+        }
+        refreshCacheSize()
+        uni.showToast({ title: '清除缓存成功', icon: 'success' })
+      }
+    }
+  })
+}
+
+function onAbout() {
+  uni.showModal({
+    title: '关于我们',
+    content: '味真足外卖 v1.0.0\n为您提供美味到家的外卖服务。',
+    showCancel: false
+  })
 }
 
 function onLogout() {
@@ -84,7 +158,11 @@ function onLogout() {
     content: '确定要退出登录吗？',
     success: (res) => {
       if (res.confirm) {
+        userStore.logout()
         uni.showToast({ title: '已退出登录', icon: 'none' })
+        setTimeout(() => {
+          uni.reLaunch({ url: '/pages/login/login' })
+        }, 600)
       }
     }
   })
@@ -175,7 +253,16 @@ function onLogout() {
   color: $text-muted;
 }
 
-.cell-danger .cell-text {
+.logout-btn {
+  margin: 24px 16px;
+  height: 48px;
+  line-height: 48px;
+  text-align: center;
+  background: #fff;
   color: $danger;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: $shadow;
 }
 </style>

@@ -1,3 +1,9 @@
+
+.category-icon-svg[data-v-55c74977] {
+  display: block;
+  flex-shrink: 0;
+}
+
 .checkout[data-v-28ee4e5d] {
   min-height: 100vh;
   background: #FFF5F5;
@@ -93,22 +99,38 @@
   font-weight: 600;
   color: #666666;
 }
-.remark-input[data-v-28ee4e5d] {
+.coupon-row[data-v-28ee4e5d],
+.remark-row[data-v-28ee4e5d] {
   background: #fff;
   margin: 0 16px 12px;
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
+  box-shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
 }
 .lbl[data-v-28ee4e5d] {
   color: #666666;
   font-size: 14px;
-  margin-right: 8px;
+  margin-right: 12px;
 }
-uni-input[data-v-28ee4e5d] {
+.coupon-text[data-v-28ee4e5d],
+.remark-text[data-v-28ee4e5d] {
   flex: 1;
   font-size: 14px;
+  color: #333333;
+}
+.coupon-text.coupon-active[data-v-28ee4e5d] {
+  color: #FF4B33;
+  font-weight: 600;
+}
+.remark-text.placeholder[data-v-28ee4e5d] {
+  color: #999999;
+}
+.arrow[data-v-28ee4e5d] {
+  font-size: 16px;
+  color: #999999;
+  margin-left: 8px;
 }
 .price-list[data-v-28ee4e5d] {
   background: #fff;
@@ -166,4 +188,148 @@ uni-input[data-v-28ee4e5d] {
   border-radius: 22px;
   font-size: 15px;
   font-weight: 600;
+}
+.submit-disabled[data-v-28ee4e5d] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.popup-mask[data-v-28ee4e5d] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+.popup-content[data-v-28ee4e5d] {
+  background: #fff;
+  width: 100%;
+  border-radius: 14px 14px 0 0;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+.popup-header[data-v-28ee4e5d] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.popup-title[data-v-28ee4e5d] {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333333;
+}
+.popup-close[data-v-28ee4e5d] {
+  font-size: 24px;
+  color: #999999;
+  padding: 0 4px;
+}
+.coupon-scroll[data-v-28ee4e5d] {
+  max-height: 420px;
+}
+.popup-coupon-list[data-v-28ee4e5d] {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.popup-coupon-item[data-v-28ee4e5d] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #FFE5E5;
+  background: #fff;
+}
+.popup-coupon-item.active[data-v-28ee4e5d] {
+  border-color: #FF4B33;
+  background: rgba(255, 75, 51, 0.04);
+}
+.popup-coupon-item.no-coupon[data-v-28ee4e5d] {
+  justify-content: space-between;
+  font-size: 14px;
+  color: #666666;
+}
+.popup-coupon-left[data-v-28ee4e5d] {
+  width: 90px;
+  height: 70px;
+  border-radius: 6px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.popup-coupon-value[data-v-28ee4e5d] {
+  font-size: 20px;
+  font-weight: 700;
+}
+.popup-coupon-condition[data-v-28ee4e5d] {
+  font-size: 11px;
+  margin-top: 2px;
+}
+.popup-coupon-body[data-v-28ee4e5d] {
+  flex: 1;
+  min-width: 0;
+}
+.popup-coupon-name[data-v-28ee4e5d] {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+}
+.popup-coupon-desc[data-v-28ee4e5d],
+.popup-coupon-expire[data-v-28ee4e5d] {
+  display: block;
+  font-size: 11px;
+  color: #999999;
+  margin-top: 3px;
+}
+.popup-check[data-v-28ee4e5d] {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #FF4B33;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.popup-footer[data-v-28ee4e5d] {
+  margin-top: 16px;
+}
+.popup-btn[data-v-28ee4e5d] {
+  height: 46px;
+  line-height: 46px;
+  text-align: center;
+  background: linear-gradient(135deg, #FF4B33, #FF6B6B);
+  color: #fff;
+  border-radius: 23px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.remark-popup[data-v-28ee4e5d] {
+  padding-bottom: 24px;
+}
+.remark-textarea[data-v-28ee4e5d] {
+  width: 100%;
+  height: 120px;
+  background: #FFF5F5;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  color: #333333;
+  box-sizing: border-box;
+}
+.remark-count[data-v-28ee4e5d] {
+  display: block;
+  text-align: right;
+  font-size: 12px;
+  color: #999999;
+  margin-top: 8px;
 }

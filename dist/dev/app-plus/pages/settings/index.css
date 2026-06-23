@@ -66,6 +66,15 @@
   font-size: 16px;
   color: #999999;
 }
-.cell-danger .cell-text[data-v-b4180827] {
+.logout-btn[data-v-b4180827] {
+  margin: 24px 16px;
+  height: 48px;
+  line-height: 48px;
+  text-align: center;
+  background: #fff;
   color: #FF4B33;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 75, 51, 0.06);
 }

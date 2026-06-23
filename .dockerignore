@@ -1,0 +1,12 @@
+# 用户端 .dockerignore
+node_modules/
+dist/
+unpackage/
+.idea/
+*.log
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+*.md
+.hbuilderx/

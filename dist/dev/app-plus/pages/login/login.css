@@ -1,3 +1,9 @@
+
+.category-icon-svg[data-v-55c74977] {
+  display: block;
+  flex-shrink: 0;
+}
+
 .login-page[data-v-cdfe2409] {
   min-height: 100vh;
   background: linear-gradient(180deg, #FF4B33 0%, #FF6B6B 30%, #FFF5F5 30%, #FFF5F5 100%);
@@ -121,4 +127,35 @@
   font-size: 11px;
   color: #999999;
   margin-top: 32px;
+}
+.submit-disabled[data-v-cdfe2409] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.agreement[data-v-cdfe2409] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 24px;
+  font-size: 12px;
+  color: #999999;
+}
+.agree-box[data-v-cdfe2409] {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #999999;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.agree-active[data-v-cdfe2409] {
+  background: #FF4B33;
+  border-color: #FF4B33;
+}
+.agree-link[data-v-cdfe2409] {
+  color: #FF4B33;
 }

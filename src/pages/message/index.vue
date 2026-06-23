@@ -1,18 +1,36 @@
 <template>
   <view class="messages">
-    <view v-if="!list.length" class="empty">
+    <!-- 顶部 Tab 与全部已读 -->
+    <view class="message-header">
+      <view class="msg-tabs">
+        <view
+          v-for="t in tabs"
+          :key="t.value"
+          :class="['msg-tab', activeTab === t.value && 'active']"
+          @tap="activeTab = t.value"
+        >
+          {{ t.label }}
+        </view>
+      </view>
+      <view class="read-all" @tap="markAllRead">
+        <CategoryIcon name="check" :size="12" />
+        <text>全部已读</text>
+      </view>
+    </view>
+
+    <view v-if="!filteredList.length" class="empty">
       <text class="empty-icon">🔔</text>
       <text class="empty-text">暂无消息</text>
     </view>
     <view v-else class="message-list">
       <view
-        v-for="m in list"
+        v-for="m in filteredList"
         :key="m.id"
         :class="['msg-item', m.unread ? 'msg-unread' : 'msg-read']"
         @tap="onRead(m)"
       >
         <view class="m-icon-wrap">
-          <text class="m-icon">📢</text>
+          <text class="m-icon">{{ typeIcon(m.type) }}</text>
           <text v-if="m.unread" class="m-dot"></text>
         </view>
         <view class="m-body">
@@ -28,22 +46,78 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { MOCK_MESSAGES } from '@/mock'
+import { getMessageList, markMessageRead, markAllMessagesRead } from '@/api'
+import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 
+const tabs = [
+  { label: '全部', value: 'all' },
+  { label: '订单', value: 'order' },
+  { label: '优惠', value: 'coupon' },
+  { label: '系统', value: 'system' }
+]
+const activeTab = ref('all')
 const list = ref<any[]>([])
 
 onShow(() => load())
 
-function load() {
-  list.value = MOCK_MESSAGES.map(m => ({ ...m }))
+async function load() {
+  try {
+    const res: any = await getMessageList({ pageNum: 1, pageSize: 50 })
+    const records = res?.list || res?.records || []
+    list.value = records.map((m: any) => ({
+      id: m.id,
+      title: m.title || '',
+      content: m.content || '',
+      time: m.createdAt || m.time || '',
+      unread: m.status === 0 || m.unread === true,
+      type: m.type || 'system'
+    }))
+  } catch (e) {
+    console.error('加载消息失败', e)
+    list.value = []
+  }
 }
 
-function onRead(m: any) {
+const filteredList = computed(() => {
+  if (activeTab.value === 'all') return list.value
+  return list.value.filter(m => m.type === activeTab.value)
+})
+
+function typeIcon(type: string) {
+  const map: Record<string, string> = {
+    order: '📦',
+    coupon: '🎫',
+    system: '🔔',
+    promo: '🔥'
+  }
+  return map[type] || '📢'
+}
+
+async function onRead(m: any) {
   if (m.unread) {
-    m.unread = false
-    uni.showToast({ title: '已标记为已读', icon: 'none' })
+    try {
+      await markMessageRead(m.id)
+      m.unread = false
+    } catch (e) {
+      uni.showToast({ title: '标记失败，请重试', icon: 'none' })
+    }
+  }
+}
+
+async function markAllRead() {
+  const unreadList = filteredList.value.filter(m => m.unread)
+  if (!unreadList.length) {
+    uni.showToast({ title: '没有未读消息', icon: 'none' })
+    return
+  }
+  try {
+    await markAllMessagesRead()
+    unreadList.forEach(m => { m.unread = false })
+    uni.showToast({ title: '已全部已读', icon: 'none' })
+  } catch (e) {
+    uni.showToast({ title: '操作失败，请重试', icon: 'none' })
   }
 }
 </script>
@@ -54,7 +128,52 @@ function onRead(m: any) {
 .messages {
   min-height: 100vh;
   background: $bg;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 12px 16px;
+  background: $card;
+  border-bottom: 1px solid $border;
+}
+
+.msg-tabs {
+  display: flex;
+  gap: 16px;
+}
+
+.msg-tab {
+  font-size: 14px;
+  color: $text-light;
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.msg-tab.active {
+  color: $primary;
+  font-weight: 700;
+}
+
+.msg-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 3px;
+  background: $primary;
+  border-radius: 2px;
+}
+
+.read-all {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: $text-muted;
 }
 
 .empty {
@@ -62,6 +181,10 @@ function onRead(m: any) {
   padding: 80px 0;
   color: $text-muted;
   .empty-icon { display: block; font-size: 60px; opacity: 0.5; margin-bottom: 12px; }
+}
+
+.message-list {
+  padding: 12px 16px;
 }
 
 .msg-item {

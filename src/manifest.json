@@ -1,32 +1,45 @@
 {
-  "name": "味真足",
-  "appid": "__UNI__WEIZHENZU",
-  "description": "味真足 - 外卖订餐客户端",
-  "versionName": "1.0.0",
-  "versionCode": "100",
-  "transformPx": false,
-  "app-plus": {
-    "usingComponents": true,
-    "nvueStyleCompiler": "uni-app",
-    "compilerVersion": 3,
-    "splashscreen": {
-      "alwaysShowBeforeRender": true,
-      "waiting": true,
-      "autoclose": true,
-      "delay": 0
-    }
-  },
-  "h5": {
-    "title": "味真足 · 外卖订餐",
-    "router": {
-      "mode": "hash",
-      "base": "/"
+    "name": "味真足",
+    "appid": "__UNI__WEIZHENZU",
+    "description": "味真足 - 外卖订餐客户端",
+    "versionName": "1.0.0",
+    "versionCode": "100",
+    "transformPx": false,
+    "app-plus": {
+        "distribute": {
+            "android": {
+                "packagename": "com.weizhenzu.client"
+            }
+        },
+        "usingComponents": true,
+        "nvueStyleCompiler": "uni-app",
+        "compilerVersion": 3,
+        "splashscreen": {
+            "alwaysShowBeforeRender": true,
+            "waiting": true,
+            "autoclose": true,
+            "delay": 0
+        }
     },
-    "devServer": {
-      "port": 5173,
-      "https": false
+    "h5": {
+        "title": "味真足 · 外卖订餐",
+        "router": {
+            "mode": "hash",
+            "base": "/"
+        },
+        "devServer": {
+            "port": 5173,
+            "https": false
+        },
+        "sdkConfigs": {
+            "maps": {
+                "amap": {
+                    "key": "8a7944b39971ba616fe55a9f85dffffa"
+                }
+            }
+        }
     },
-    "sdkConfigs": {}
-  },
-  "vueVersion": "3"
+    "vueVersion": "3",
+    "fallbackLocale": "zh-Hans",
+    "locale": "zh-Hans"
 }

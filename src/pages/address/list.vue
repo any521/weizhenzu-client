@@ -42,9 +42,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
-import { MOCK_ADDRESSES } from '@/mock'
+import { getAddressList, deleteAddress, setDefaultAddress } from '@/api'
+import type { AddressVO } from '@/types/api'
 
-const list = ref<any[]>([])
+const list = ref<AddressVO[]>([])
 const loading = ref(false)
 let fromCheckout = false
 
@@ -53,9 +54,13 @@ onShow(() => load())
 
 async function load() {
   loading.value = true
-  // 使用 Mock 数据
-  list.value = MOCK_ADDRESSES.map(a => ({ ...a, default: a.default || false }))
-  loading.value = false
+  try {
+    list.value = await getAddressList()
+  } catch (e) {
+    console.error('加载地址失败', e)
+  } finally {
+    loading.value = false
+  }
 }
 
 function onSelect(a: any) {
@@ -66,20 +71,27 @@ function onSelect(a: any) {
 }
 function add() { uni.navigateTo({ url: '/pages/address/edit' }) }
 function edit(a: any) { uni.navigateTo({ url: `/pages/address/edit?id=${a.id}` }) }
-function del(a: any) {
-  uni.showModal({
+async function del(a: AddressVO) {
+  const confirmed = await uni.showModal({
     title: '提示', content: '确定删除该地址？',
-    success: (r) => {
-      if (r.confirm) {
-        list.value = list.value.filter(item => item.id !== a.id)
-        uni.showToast({ title: '已删除', icon: 'success' })
-      }
-    }
-  })
+  }).then(r => r.confirm).catch(() => false)
+  if (!confirmed) return
+  try {
+    await deleteAddress(a.id)
+    list.value = list.value.filter(item => item.id !== a.id)
+    uni.showToast({ title: '已删除', icon: 'success' })
+  } catch (e) {
+    console.error('删除地址失败', e)
+  }
 }
-function setDefault(a: any) {
-  list.value.forEach(item => { item.default = item.id === a.id })
-  uni.showToast({ title: '已设为默认', icon: 'success' })
+async function setDefault(a: AddressVO) {
+  try {
+    await setDefaultAddress(a.id)
+    list.value.forEach(item => { item.default = item.id === a.id })
+    uni.showToast({ title: '已设为默认', icon: 'success' })
+  } catch (e) {
+    console.error('设置默认地址失败', e)
+  }
 }
 </script>
 

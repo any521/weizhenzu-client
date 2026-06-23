@@ -104,16 +104,19 @@
   color: #333333;
 }
 .orders-tabs[data-v-80f8e5f8] {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
   background: #FFFFFF;
-  padding: 0 16px;
   border-bottom: 1px solid #FFE5E5;
+}
+.tabs-scroll[data-v-80f8e5f8] {
+  white-space: nowrap;
+}
+.tabs-wrap[data-v-80f8e5f8] {
+  display: inline-flex;
+  padding: 0 12px;
 }
 .orders-tab[data-v-80f8e5f8] {
   position: relative;
-  padding: 14px 8px;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -122,6 +125,7 @@
   font-size: 14px;
   color: #666666;
   transition: color 0.2s;
+  white-space: nowrap;
 }
 .orders-tab-line[data-v-80f8e5f8] {
   position: absolute;

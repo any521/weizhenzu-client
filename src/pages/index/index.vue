@@ -18,13 +18,13 @@
 
       <view class="location-bar" @tap="onLocationTap">
         <CategoryIcon name="location" :size="16" />
-        <text class="loc-text">河南科技大学西苑校区北院</text>
+        <text class="loc-text">{{ locationText }}</text>
         <text class="loc-arrow">▼</text>
       </view>
 
       <view class="search-bar" @tap="goSearch">
         <CategoryIcon name="search" :size="16" />
-        <text class="search-placeholder">正新炸鸡排</text>
+        <text class="search-placeholder">搜索商家或商品</text>
         <text class="search-btn">搜索</text>
       </view>
     </view>
@@ -33,7 +33,7 @@
     <scroll-view scroll-x class="category-scroll" :show-scrollbar="false">
       <view class="category-row">
         <view
-          v-for="cat in allCategories"
+          v-for="cat in displayCategories"
           :key="cat.id"
           class="category-item"
           @tap="onCategoryTap(cat)"
@@ -71,32 +71,31 @@
       </scroll-view>
     </view>
 
-    <!-- 优惠券条 -->
-    <view class="coupon-strip">
-      <view class="coupon-item coupon-red">
-        <view class="coupon-val">¥18</view>
-        <view class="coupon-info">
-          <text class="coupon-name">老朋友回归礼</text>
-          <text class="coupon-rule">满28可用</text>
+    <!-- 优惠券条（左右滑动） -->
+    <scroll-view v-if="coupons.length" scroll-x class="coupon-scroll" :show-scrollbar="false">
+      <view class="coupon-strip">
+        <view
+          v-for="c in coupons"
+          :key="c.id"
+          class="coupon-item coupon-red"
+          @tap="onCouponTap(c)"
+        >
+          <view class="coupon-val">{{ couponValue(c) }}</view>
+          <view class="coupon-info">
+            <text class="coupon-name">{{ c.name }}</text>
+            <text class="coupon-rule">{{ couponRule(c) }}</text>
+          </view>
+          <text class="coupon-action">{{ c.canReceive ? '领取' : '去使用' }}</text>
         </view>
-        <text class="coupon-action">去使用</text>
       </view>
-      <view class="coupon-item coupon-red">
-        <view class="coupon-val">¥18</view>
-        <view class="coupon-info">
-          <text class="coupon-name">外卖神券</text>
-          <text class="coupon-rule">满30可用</text>
-        </view>
-        <text class="coupon-action">去使用</text>
-      </view>
-    </view>
+    </scroll-view>
 
     <!-- 附近商家 -->
     <view class="merchant-section">
       <view class="section-header">
         <text class="section-title">附近商家</text>
         <text class="section-sub">特价外卖</text>
-        <text class="section-more">一键下单</text>
+        <text class="section-more" @tap="goMerchantList">一键下单</text>
       </view>
       <view class="filter-bar">
         <text
@@ -109,6 +108,12 @@
           <CategoryIcon name="list" :size="14" />
         </view>
       </view>
+
+      <view v-if="loading" class="loading-wrap">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">加载中...</text>
+      </view>
+
       <view class="merchant-list">
         <view
           v-for="m in merchants"
@@ -117,7 +122,7 @@
           @tap="goMerchantDetail(m.id)"
         >
           <view class="merchant-img" :style="{ background: m.bg }">
-            <CategoryIcon name="shop" :size="28" class="merchant-logo" />
+            <text class="merchant-logo-text">{{ m.logo }}</text>
           </view>
           <view class="merchant-info">
             <view class="merchant-name">
@@ -135,12 +140,12 @@
             <view class="merchant-price">
               <text>起送 ¥{{ m.minOrder }}</text>
               <text>配送约¥{{ m.deliveryFee }}</text>
-              <text>人均¥{{ m.perCapita || 24 }}</text>
+              <text v-if="m.perCapita">人均¥{{ m.perCapita }}</text>
             </view>
             <view class="merchant-tags">
               <text v-for="(tag, idx) in m.tags" :key="idx" :class="['tag', `tag-${tag.type}`]">{{ tag.text }}</text>
             </view>
-            <view class="merchant-promo">{{ m.promo }}</view>
+            <view v-if="m.promo" class="merchant-promo">{{ m.promo }}</view>
           </view>
         </view>
       </view>
@@ -182,16 +187,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { MOCK_HOME_BANNER, MOCK_MERCHANTS } from '@/mock'
+import { getMerchantCategories, getMerchantPage, getAvailableCoupons } from '@/api/index'
+import type { MerchantCategoryVO, MerchantCardVO, CouponVO } from '@/types/api'
 import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 import GlobalTabbar from '@/components/GlobalTabbar/GlobalTabbar.vue'
 import { useTabStore } from '@/store/tab'
 
 const tabStore = useTabStore()
-const banner = ref(MOCK_HOME_BANNER)
-const merchants = ref(MOCK_MERCHANTS.map((m: any) => ({ ...m, distance: m.distance || '920m', perCapita: m.perCapita || 24 })))
+const locationText = ref('请选择地址')
+const merchants = ref<MerchantCardVO[]>([])
+const categories = ref<MerchantCategoryVO[]>([])
+const coupons = ref<CouponVO[]>([])
+const loading = ref(false)
 const showMorePanel = ref(false)
 const activeTopTab = ref('外卖')
 const activeFilter = ref('综合排序')
@@ -199,52 +208,184 @@ const activeFilter = ref('综合排序')
 const topTabs = ['外卖', '首页', '自取']
 const filters = ['综合排序', '销量最高', '距离最近', '筛选']
 
-const allCategories = [
-  { id: 1, name: '美食', iconName: 'meishi', group: '美食餐饮', bg: 'linear-gradient(135deg, #FF6B35, #FF8C42)' },
-  { id: 2, name: '甜点饮品', iconName: 'dessert', group: '甜品饮品', bg: 'linear-gradient(135deg, #2196F3, #03A9F4)' },
-  { id: 3, name: '超市便利', iconName: 'store', group: '生活服务', bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)' },
-  { id: 4, name: '蔬菜水果', iconName: 'fruit', group: '生活服务', bg: 'linear-gradient(135deg, #9C27B0, #BA68C8)' },
-  { id: 5, name: '看病买药', iconName: 'pharmacy', group: '生活服务', bg: 'linear-gradient(135deg, #26C6DA, #4DD0E1)' },
-  { id: 6, name: '夜宵', iconName: 'bbq', group: '美食餐饮', bg: 'linear-gradient(135deg, #F44336, #EF5350)' },
-  { id: 7, name: '拼好饭', iconName: 'waimai', group: '优惠助手', bg: 'linear-gradient(135deg, #FF5722, #FF8A65)' },
-  { id: 8, name: '神枪手', iconName: 'brand', group: '特色推荐', bg: 'linear-gradient(135deg, #FFC107, #FFD54F)' },
-  { id: 9, name: '必点榜', iconName: 'star', group: '特色推荐', bg: 'linear-gradient(135deg, #E91E63, #F06292)' },
-  { id: 10, name: '堂食店', iconName: 'hotpot', group: '美食餐饮', bg: 'linear-gradient(135deg, #FF7043, #FF8A65)' },
-  { id: 11, name: '学生价', iconName: 'coffee', group: '优惠助手', bg: 'linear-gradient(135deg, #00BCD4, #4DD0E1)' },
-  { id: 12, name: '明厨亮灶', iconName: 'salad', group: '品质甄选', bg: 'linear-gradient(135deg, #66BB6A, #A5D6A7)' },
-  { id: 13, name: '送奶茶', iconName: 'dessert', group: '特色推荐', bg: 'linear-gradient(135deg, #AB47BC, #CE93D8)' },
-  { id: 14, name: '每日大牌', iconName: 'brand', group: '特色推荐', bg: 'linear-gradient(135deg, #FF5722, #FF8A65)' },
-  { id: 15, name: '汉堡披萨', iconName: 'burger', group: '美食餐饮', bg: 'linear-gradient(135deg, #E91E63, #F06292)' },
-  { id: 16, name: '天天津贴', iconName: 'ticket', group: '优惠助手', bg: 'linear-gradient(135deg, #FFA726, #FFCC80)' },
-  { id: 17, name: '小美餐厅', iconName: 'noodles', group: '美食餐饮', bg: 'linear-gradient(135deg, #795548, #A1887F)' },
-  { id: 18, name: '面包蛋糕', iconName: 'cake', group: '甜品饮品', bg: 'linear-gradient(135deg, #AB47BC, #CE93D8)' },
-  { id: 19, name: '包子粥铺', iconName: 'breakfast', group: '美食餐饮', bg: 'linear-gradient(135deg, #FFB74D, #FFCC80)' },
-  { id: 20, name: '全部', iconName: 'more', group: '全部', isMore: true, bg: 'linear-gradient(135deg, #607D8B, #90A4AE)' }
-]
+const CATEGORY_BG: Record<string, string> = {
+  美食: 'linear-gradient(135deg, #FF6B35, #FF8C42)',
+  早餐: 'linear-gradient(135deg, #FFC107, #FFD54F)',
+  跑腿代购: 'linear-gradient(135deg, #4CAF50, #8BC34A)',
+  甜品饮品: 'linear-gradient(135deg, #2196F3, #03A9F4)',
+  果蔬生鲜: 'linear-gradient(135deg, #9C27B0, #BA68C8)',
+  汉堡西餐: 'linear-gradient(135deg, #E91E63, #F06292)',
+  咖啡奶茶: 'linear-gradient(135deg, #00BCD4, #4DD0E1)',
+  大牌专送: 'linear-gradient(135deg, #FF5722, #FF8A65)',
+  面食: 'linear-gradient(135deg, #795548, #A1887F)',
+  超市便利: 'linear-gradient(135deg, #4CAF50, #8BC34A)',
+  蔬菜水果: 'linear-gradient(135deg, #9C27B0, #BA68C8)',
+  看病买药: 'linear-gradient(135deg, #26C6DA, #4DD0E1)',
+  夜宵: 'linear-gradient(135deg, #F44336, #EF5350)',
+  拼好饭: 'linear-gradient(135deg, #FF5722, #FF8A65)',
+  神枪手: 'linear-gradient(135deg, #FFC107, #FFD54F)',
+  必点榜: 'linear-gradient(135deg, #E91E63, #F06292)',
+  堂食店: 'linear-gradient(135deg, #FF7043, #FF8A65)',
+  学生价: 'linear-gradient(135deg, #00BCD4, #4DD0E1)',
+  送奶茶: 'linear-gradient(135deg, #AB47BC, #CE93D8)',
+  每日大牌: 'linear-gradient(135deg, #FF5722, #FF8A65)',
+  天天津贴: 'linear-gradient(135deg, #FFA726, #FFCC80)',
+  小美餐厅: 'linear-gradient(135deg, #795548, #A1887F)',
+  面包蛋糕: 'linear-gradient(135deg, #AB47BC, #CE93D8)',
+  包子粥铺: 'linear-gradient(135deg, #FFB74D, #FFCC80)',
+}
 
-const displayCategories = computed(() => {
-  return allCategories
+function iconNameForCategory(name: string): string {
+  if (name.includes('美食')) return 'meishi'
+  if (name.includes('早餐') || name.includes('粥铺')) return 'breakfast'
+  if (name.includes('跑腿') || name.includes('代购')) return 'errand'
+  if (name.includes('甜品') || name.includes('饮品') || name.includes('奶茶') || name.includes('蛋糕')) return 'dessert'
+  if (name.includes('水果') || name.includes('生鲜') || name.includes('蔬菜')) return 'fruit'
+  if (name.includes('汉堡') || name.includes('西餐') || name.includes('披萨')) return 'burger'
+  if (name.includes('咖啡')) return 'coffee'
+  if (name.includes('大牌') || name.includes('品牌')) return 'brand'
+  if (name.includes('面') || name.includes('粉') || name.includes('小吃')) return 'noodles'
+  if (name.includes('超市') || name.includes('便利') || name.includes('商店')) return 'store'
+  if (name.includes('买药') || name.includes('医药')) return 'pharmacy'
+  if (name.includes('夜宵') || name.includes('烧烤')) return 'bbq'
+  if (name.includes('火锅') || name.includes('锅')) return 'hotpot'
+  if (name.includes('寿司') || name.includes('日料')) return 'sushi'
+  if (name.includes('轻食') || name.includes('沙拉')) return 'salad'
+  return 'more'
+}
+
+function categoryGroup(name: string): string {
+  if (['美食', '早餐', '夜宵', '汉堡西餐', '面食', '堂食店', '小美餐厅', '面包蛋糕', '包子粥铺'].includes(name)) return '美食餐饮'
+  if (['甜品饮品', '咖啡奶茶', '送奶茶'].includes(name)) return '甜品饮品'
+  if (['超市便利', '果蔬生鲜', '蔬菜水果', '看病买药'].includes(name)) return '生活服务'
+  if (['拼好饭', '神枪手', '天天津贴', '学生价'].includes(name)) return '优惠助手'
+  if (['大牌专送', '必点榜', '每日大牌'].includes(name)) return '特色推荐'
+  if (['跑腿代购'].includes(name)) return '跑腿代购'
+  return '全部'
+}
+
+const allCategories = computed(() => {
+  const list = categories.value.map((c) => ({
+    id: c.id,
+    name: c.name,
+    iconName: iconNameForCategory(c.name),
+    bg: CATEGORY_BG[c.name] || 'linear-gradient(135deg, #607D8B, #90A4AE)',
+    group: categoryGroup(c.name),
+    isMore: false,
+  }))
+  // 追加“全部”入口
+  list.push({
+    id: 0,
+    name: '全部',
+    iconName: 'more',
+    bg: 'linear-gradient(135deg, #607D8B, #90A4AE)',
+    group: '全部',
+    isMore: true,
+  })
+  return list
 })
+
+const displayCategories = computed(() => allCategories.value.slice(0, 11))
 
 const categoryGroups = computed(() => {
   const map: Record<string, any[]> = {}
-  allCategories.forEach((c) => {
+  allCategories.value.forEach((c) => {
     if (!map[c.group]) map[c.group] = []
     map[c.group].push(c)
   })
   return Object.keys(map).map((name) => ({ name, items: map[name] }))
 })
 
-const deals = ref([
-  { id: 1, name: '黄焖鸡米饭', price: 9.9, merchantId: 1, bg: 'linear-gradient(135deg, #FF6B35, #FFC107)' },
-  { id: 2, name: '鸡腿堡套餐', price: 12.9, merchantId: 1, bg: 'linear-gradient(135deg, #4CAF50, #8BC34A)' },
-  { id: 3, name: '麻辣香锅', price: 15.9, merchantId: 3, bg: 'linear-gradient(135deg, #E91E63, #FF8A65)' },
-  { id: 4, name: '奶茶双杯', price: 13.5, merchantId: 2, bg: 'linear-gradient(135deg, #2196F3, #03A9F4)' }
-])
+const deals = ref<Array<{ id: number; name: string; price: number; merchantId: number; bg: string }>>([])
 
 onShow(() => {
   tabStore.setActiveTab('/pages/index/index')
 })
+
+onMounted(() => {
+  loadCategories()
+  loadMerchants()
+  loadCoupons()
+  loadDeals()
+})
+
+async function loadCategories() {
+  try {
+    categories.value = await getMerchantCategories()
+  } catch (e) {
+    console.error('加载分类失败', e)
+  }
+}
+
+async function loadMerchants() {
+  loading.value = true
+  try {
+    const page = await getMerchantPage({ current: 1, size: 10 })
+    merchants.value = page.list
+  } catch (e) {
+    console.error('加载商家失败', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadCoupons() {
+  try {
+    coupons.value = await getAvailableCoupons()
+  } catch (e) {
+    console.error('加载优惠券失败', e)
+    coupons.value = []
+  }
+}
+
+async function loadDeals() {
+  try {
+    const page = await getMerchantPage({ current: 1, size: 10 })
+    const list = page.list || []
+    const dishBgList = [
+      'linear-gradient(135deg, #FF6B35, #FFC107)',
+      'linear-gradient(135deg, #4CAF50, #8BC34A)',
+      'linear-gradient(135deg, #E91E63, #FF8A65)',
+      'linear-gradient(135deg, #2196F3, #03A9F4)',
+      'linear-gradient(135deg, #9C27B0, #BA68C8)'
+    ]
+    deals.value = list.slice(0, 8).map((m, idx) => ({
+      id: m.id,
+      name: m.name,
+      price: m.perCapita || m.minOrder || 0,
+      merchantId: m.id,
+      bg: dishBgList[idx % dishBgList.length]
+    }))
+  } catch (e) {
+    console.error('加载精选推荐失败', e)
+    deals.value = []
+  }
+}
+
+function couponValue(c: CouponVO): string {
+  if (c.type === 2 && c.discount) {
+    return `${(c.discount * 10).toFixed(1)}折`
+  }
+  if (c.amount) {
+    return `¥${c.amount}`
+  }
+  return '优惠'
+}
+
+function couponRule(c: CouponVO): string {
+  if (c.threshold && c.threshold > 0) {
+    return `满${c.threshold}可用`
+  }
+  return '无门槛'
+}
+
+function onCouponTap(c: CouponVO) {
+  if (c.canReceive) {
+    uni.showToast({ title: '请登录后领取', icon: 'none' })
+  } else {
+    uni.navigateTo({ url: '/pages/coupon/index' })
+  }
+}
 
 function onCategoryTap(cat: any) {
   if (cat.isMore) {
@@ -497,16 +638,21 @@ function goMerchantDetail(id: number) {
   font-size: 11px;
 }
 
-.coupon-strip {
-  display: flex;
-  gap: 10px;
-  padding: 12px 16px;
+.coupon-scroll {
   background: #fff;
   margin-top: 10px;
+  white-space: nowrap;
+}
+
+.coupon-strip {
+  display: inline-flex;
+  gap: 10px;
+  padding: 12px 16px;
 }
 
 .coupon-item {
-  flex: 1;
+  flex-shrink: 0;
+  width: 220px;
   background: linear-gradient(135deg, #FF4B33 0%, #FF6B6B 100%);
   border-radius: 10px;
   padding: 10px 12px;
@@ -615,6 +761,32 @@ function goMerchantDetail(id: number) {
   color: $text-light;
 }
 
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba($primary, 0.25);
+  border-top-color: $primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  margin-top: 8px;
+  font-size: 12px;
+  color: $text-muted;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .merchant-list {
   padding: 0 16px;
 }
@@ -641,8 +813,10 @@ function goMerchantDetail(id: number) {
   overflow: hidden;
 }
 
-.merchant-logo {
+.merchant-logo-text {
   color: #fff;
+  font-size: 28px;
+  font-weight: 700;
 }
 
 .merchant-info {

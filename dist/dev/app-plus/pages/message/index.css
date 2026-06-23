@@ -1,7 +1,52 @@
+
+.category-icon-svg[data-v-55c74977] {
+  display: block;
+  flex-shrink: 0;
+}
+
 .messages[data-v-bdafde18] {
   min-height: 100vh;
   background: #FFF5F5;
+}
+.message-header[data-v-bdafde18] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 12px 16px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #FFE5E5;
+}
+.msg-tabs[data-v-bdafde18] {
+  display: flex;
+  gap: 16px;
+}
+.msg-tab[data-v-bdafde18] {
+  font-size: 14px;
+  color: #666666;
+  position: relative;
+  padding-bottom: 4px;
+}
+.msg-tab.active[data-v-bdafde18] {
+  color: #FF4B33;
+  font-weight: 700;
+}
+.msg-tab.active[data-v-bdafde18]::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 3px;
+  background: #FF4B33;
+  border-radius: 2px;
+}
+.read-all[data-v-bdafde18] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #999999;
 }
 .empty[data-v-bdafde18] {
   text-align: center;
@@ -13,6 +58,9 @@
   font-size: 60px;
   opacity: 0.5;
   margin-bottom: 12px;
+}
+.message-list[data-v-bdafde18] {
+  padding: 12px 16px;
 }
 .msg-item[data-v-bdafde18] {
   display: flex;

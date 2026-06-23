@@ -79,6 +79,7 @@ export interface MerchantCategoryVO {
   id: number
   name: string
   icon?: string
+  color?: string
 }
 
 /** 商家促销标签 */
@@ -89,7 +90,7 @@ export interface PromoItem {
 
 /** 商家信息（后端 MerchantVO 映射） */
 export interface MerchantVO {
-  id: number
+  id: number | string
   name: string
   logo?: string
   categoryId?: number
@@ -121,7 +122,7 @@ export interface MerchantVO {
 
 /** 前端商家卡片展示用 */
 export interface MerchantCardVO {
-  id: number
+  id: number | string
   name: string
   logo: string
   bg: string
@@ -191,6 +192,20 @@ export interface DishCategoryVO {
   sort?: number
   status?: number
   dishes?: DishVO[]
+}
+
+/** 推荐菜品 */
+export interface RecommendDishVO {
+  id: number | string
+  name: string
+  merchantId: number | string
+  merchantName: string
+  image?: string
+  price: number
+  monthSales?: number
+  rating?: number
+  reason?: string
+  bg?: string
 }
 
 /** 购物车项 */

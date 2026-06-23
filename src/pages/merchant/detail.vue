@@ -146,8 +146,8 @@ const cartItemMap = computed(() => {
 })
 
 onLoad((q: any) => {
-  const id = Number(q?.id || 1)
-  merchantId.value = id
+  const id = q?.id || '1'
+  merchantId.value = Number(id)
   loadData(id)
   uni.getSystemInfo({
     success: (res: any) => {
@@ -176,6 +176,7 @@ async function loadData(id: number) {
     categories.value = menu || []
   } catch (e) {
     console.error('加载商家详情失败', e)
+    setTimeout(() => { uni.navigateBack() }, 1500)
   }
 }
 
@@ -235,7 +236,7 @@ function goCart() {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .page {
   min-height: 100vh;

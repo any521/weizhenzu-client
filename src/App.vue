@@ -23,7 +23,7 @@ onHide(() => {
 
 <style lang="scss">
 /* 全局样式 - 红色调外卖风格 */
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 page {
   background: $bg;

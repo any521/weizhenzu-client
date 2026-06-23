@@ -172,7 +172,7 @@ function onFavorites() {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .profile {
   min-height: 100vh;

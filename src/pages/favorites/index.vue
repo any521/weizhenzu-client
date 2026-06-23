@@ -107,13 +107,13 @@ function goHome() {
   uni.switchTab({ url: '/pages/index/index' })
 }
 
-function goMerchant(id: number) {
+function goMerchant(id: number | string) {
   uni.navigateTo({ url: `/pages/merchant/detail?id=${id}` })
 }
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .favorites-page {
   min-height: 100vh;

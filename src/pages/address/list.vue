@@ -96,7 +96,7 @@ async function setDefault(a: AddressVO) {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .addresses {
   min-height: 100vh;

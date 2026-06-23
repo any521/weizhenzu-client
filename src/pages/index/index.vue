@@ -46,12 +46,12 @@
       </view>
     </scroll-view>
 
-    <!-- 拼好饭精选 -->
+    <!-- 推荐商家 -->
     <view class="deal-section">
       <view class="deal-header">
         <view class="deal-title">
-          <text class="deal-name">精选推荐</text>
-          <text class="deal-tag">0起送 0配送</text>
+          <text class="deal-name">推荐商家</text>
+          <text class="deal-tag">人气好店</text>
         </view>
         <text class="deal-more">更多 ›</text>
       </view>
@@ -62,11 +62,15 @@
           class="deal-card"
           @tap="goMerchantDetail(d.merchantId)"
         >
-          <view class="deal-img" :style="{ background: d.bg }"></view>
+          <view class="deal-img" :style="{ background: d.bg || 'linear-gradient(135deg, #FF6B35, #FFC107)' }"></view>
           <text class="deal-food">{{ d.name }}</text>
-          <text class="deal-price">
-            <text class="price-symbol">¥</text>{{ d.price }}
-          </text>
+          <text class="deal-merchant">{{ d.merchantName }}</text>
+          <view class="deal-bottom">
+            <text class="deal-price">
+              <text class="price-symbol">¥</text>{{ d.price }}
+            </text>
+            <text v-if="d.reason" class="deal-reason">{{ d.reason }}</text>
+          </view>
         </view>
       </scroll-view>
     </view>
@@ -189,8 +193,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getMerchantCategories, getMerchantPage, getAvailableCoupons } from '@/api/index'
-import type { MerchantCategoryVO, MerchantCardVO, CouponVO } from '@/types/api'
+import { getMerchantCategories, getMerchantPage, getAvailableCoupons, getRecommendDishes } from '@/api/index'
+import type { MerchantCategoryVO, MerchantCardVO, CouponVO, RecommendDishVO } from '@/types/api'
 import CategoryIcon from '@/components/CategoryIcon/CategoryIcon.vue'
 import GlobalTabbar from '@/components/GlobalTabbar/GlobalTabbar.vue'
 import { useTabStore } from '@/store/tab'
@@ -200,6 +204,7 @@ const locationText = ref('请选择地址')
 const merchants = ref<MerchantCardVO[]>([])
 const categories = ref<MerchantCategoryVO[]>([])
 const coupons = ref<CouponVO[]>([])
+const deals = ref<RecommendDishVO[]>([])
 const loading = ref(false)
 const showMorePanel = ref(false)
 const activeTopTab = ref('外卖')
@@ -254,6 +259,48 @@ function iconNameForCategory(name: string): string {
   return 'more'
 }
 
+const ICON_MAP: Record<string, string> = {
+  Food: 'meishi',
+  IceCream: 'dessert',
+  Coffee: 'coffee',
+  Apple: 'fruit',
+  Burger: 'burger',
+  Sugar: 'dessert',
+  ForkSpoon: 'meishi',
+  KnifeFork: 'meishi',
+  Dessert: 'dessert',
+  IceDrink: 'dessert',
+  HotWater: 'breakfast',
+  Shop: 'store',
+  FirstAidKit: 'pharmacy',
+  Basketball: 'brand',
+  Van: 'errand',
+  Service: 'brand',
+  Present: 'brand',
+  Star: 'brand',
+  More: 'more',
+}
+
+const COLOR_DEFAULTS: Record<string, string> = {
+  美食: '#FF6B35',
+  甜品饮品: '#2196F3',
+  生鲜果蔬: '#4CAF50',
+  鲜花蛋糕: '#E91E63',
+  医药健康: '#00BCD4',
+  商超便利: '#FF9800',
+}
+
+function resolveIcon(icon?: string, name?: string): string {
+  if (icon && ICON_MAP[icon]) return ICON_MAP[icon]
+  if (icon && !icon.startsWith('Icon')) return icon
+  return name ? iconNameForCategory(name) : 'more'
+}
+
+function resolveColor(color?: string, name?: string): string {
+  const base = color || COLOR_DEFAULTS[name || ''] || '#4CAF50'
+  return `linear-gradient(135deg, ${base}, ${base}CC)`
+}
+
 function categoryGroup(name: string): string {
   if (['美食', '早餐', '夜宵', '汉堡西餐', '面食', '堂食店', '小美餐厅', '面包蛋糕', '包子粥铺'].includes(name)) return '美食餐饮'
   if (['甜品饮品', '咖啡奶茶', '送奶茶'].includes(name)) return '甜品饮品'
@@ -268,8 +315,8 @@ const allCategories = computed(() => {
   const list = categories.value.map((c) => ({
     id: c.id,
     name: c.name,
-    iconName: iconNameForCategory(c.name),
-    bg: CATEGORY_BG[c.name] || 'linear-gradient(135deg, #607D8B, #90A4AE)',
+    iconName: resolveIcon(c.icon, c.name),
+    bg: resolveColor(c.color, c.name),
     group: categoryGroup(c.name),
     isMore: false,
   }))
@@ -295,8 +342,6 @@ const categoryGroups = computed(() => {
   })
   return Object.keys(map).map((name) => ({ name, items: map[name] }))
 })
-
-const deals = ref<Array<{ id: number; name: string; price: number; merchantId: number; bg: string }>>([])
 
 onShow(() => {
   tabStore.setActiveTab('/pages/index/index')
@@ -340,24 +385,9 @@ async function loadCoupons() {
 
 async function loadDeals() {
   try {
-    const page = await getMerchantPage({ current: 1, size: 10 })
-    const list = page.list || []
-    const dishBgList = [
-      'linear-gradient(135deg, #FF6B35, #FFC107)',
-      'linear-gradient(135deg, #4CAF50, #8BC34A)',
-      'linear-gradient(135deg, #E91E63, #FF8A65)',
-      'linear-gradient(135deg, #2196F3, #03A9F4)',
-      'linear-gradient(135deg, #9C27B0, #BA68C8)'
-    ]
-    deals.value = list.slice(0, 8).map((m, idx) => ({
-      id: m.id,
-      name: m.name,
-      price: m.perCapita || m.minOrder || 0,
-      merchantId: m.id,
-      bg: dishBgList[idx % dishBgList.length]
-    }))
+    deals.value = await getRecommendDishes(8)
   } catch (e) {
-    console.error('加载精选推荐失败', e)
+    console.error('加载推荐商家失败', e)
     deals.value = []
   }
 }
@@ -412,13 +442,13 @@ function goMessage() {
 function goMerchantList() {
   uni.navigateTo({ url: '/pages/merchant/list' })
 }
-function goMerchantDetail(id: number) {
+function goMerchantDetail(id: number | string) {
   uni.navigateTo({ url: `/pages/merchant/detail?id=${id}` })
 }
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .home {
   min-height: 100vh;
@@ -628,10 +658,38 @@ function goMerchantDetail(id: number) {
   white-space: nowrap;
 }
 
+.deal-merchant {
+  font-size: 10px;
+  color: $text-muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.deal-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
 .deal-price {
   font-size: 16px;
   font-weight: 800;
   color: $secondary;
+}
+
+.deal-reason {
+  font-size: 9px;
+  color: #FF6B35;
+  background: rgba(255, 107, 53, 0.1);
+  padding: 1px 4px;
+  border-radius: 4px;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .price-symbol {

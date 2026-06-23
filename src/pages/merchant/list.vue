@@ -128,13 +128,13 @@ function loadMore() {
   // 当前先做一次性加载，后续可扩展分页
 }
 
-function goDetail(id: number) {
+function goDetail(id: number | string) {
   uni.navigateTo({ url: `/pages/merchant/detail?id=${id}` })
 }
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .page {
   min-height: 100vh;

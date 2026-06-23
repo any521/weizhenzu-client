@@ -14,6 +14,7 @@ import type {
   MerchantCategoryVO,
   DishVO,
   DishCategoryVO,
+  RecommendDishVO,
   CartVO,
   CartItemVO,
   OrderVO,
@@ -94,15 +95,17 @@ export const getMerchantPage = async (params: MerchantPageParams): Promise<PageR
   return { ...page, list: merchantListVoToCard(page.list) }
 }
 
-export const getMerchantDetail = (id: number) => get<MerchantVO>(`/api/user/merchants/${id}`)
+export const getMerchantDetail = (id: number | string) => get<MerchantVO>(`/api/user/merchants/${id}`)
 
-export const getMerchantMenu = (id: number) => get<DishCategoryVO[]>(`/api/user/merchants/${id}/menu`)
+export const getMerchantMenu = (id: number | string) => get<DishCategoryVO[]>(`/api/user/merchants/${id}/menu`)
 
 export const getMerchantReviews = (merchantId: number, params?: { current?: number; size?: number }) =>
   get<PageResult<ReviewVO>>(`/api/user/merchants/${merchantId}/reviews`, params)
 
 // ==================== 菜品 ====================
 export const getDishDetail = (id: number) => get<DishVO>(`/api/user/dishes/${id}`)
+
+export const getRecommendDishes = (size = 8) => get<RecommendDishVO[]>('/api/user/recommend/dishes', { size })
 
 export const getDishReviews = (dishId: number, params?: { current?: number; size?: number }) =>
   get<PageResult<ReviewVO>>(`/api/user/dishes/${dishId}/reviews`, params)

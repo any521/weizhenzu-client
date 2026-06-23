@@ -22,7 +22,7 @@ const sizeClass = computed(() => `spinner--${props.size}`)
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .app-loading {
   display: flex;

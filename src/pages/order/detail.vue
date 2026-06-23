@@ -355,7 +355,7 @@ function onAction(btn: { text: string; primary: boolean }) {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .detail {
   min-height: 100vh;

@@ -327,7 +327,7 @@ function onBtnClick(order: any, btn: any) {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .orders-page {
   min-height: 100vh;

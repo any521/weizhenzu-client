@@ -159,7 +159,7 @@ async function onSave() {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .edit { min-height: 100vh; background: $bg; padding: 12px 16px; }
 .form-card { background: #fff; border-radius: $radius-md; overflow: hidden; }
